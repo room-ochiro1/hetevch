@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Expo/React Native works most reliably with a hoisted node_modules layout.
+nodeLinker: hoisted
+
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
+  supabase: true
