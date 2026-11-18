@@ -7,7 +7,7 @@ import { signIn, type SignInState } from './actions';
 const initialState: SignInState = { error: null };
 
 const inputClass =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent';
+  'w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent';
 
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(signIn, initialState);
@@ -36,7 +36,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:opacity-90 disabled:opacity-60"
       >
         {pending ? 'Нэвтэрч байна…' : 'Нэвтрэх'}
       </button>

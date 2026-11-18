@@ -3,10 +3,11 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors } from '@/constants/theme';
+import { Colors, type Palette } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export function useTheme() {
+/** The active palette. Follows the system unless the user picked a theme in Profile. */
+export function useTheme(): Palette {
   const scheme = useColorScheme();
   const theme = scheme === 'dark' ? 'dark' : 'light';
 

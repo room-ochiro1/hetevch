@@ -1,47 +1,64 @@
 import 'server-only';
 
+import type { UserRole } from '@hetevch/shared';
+
 import { requireAdmin } from '@/lib/dal/auth';
+import { pageRange, sanitizeSearch } from '@/lib/search-params';
 import { createClient } from '@/lib/supabase/server';
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-export type UserStats = {
-  total: number;
-  admins: number;
-  newThisWeek: number;
+export type UserListItem = {
+  id: string;
+  email: string | null;
+  fullName: string | null;
+  role: UserRole;
+  createdAt: string;
+  txCount: number;
 };
 
-export async function getUserStats(): Promise<UserStats> {
+export type UserFilters = {
+  search?: string;
+  role?: UserRole;
+  page: number;
+};
+
+export async function listUsers({ search, role, page }: UserFilters) {
   await requireAdmin();
   const supabase = await createClient();
-  const weekAgo = new Date(Date.now() - WEEK_MS).toISOString();
-  const countProfiles = () =>
-    supabase.from('profiles').select('*', { count: 'exact', head: true });
+  const [from, to] = pageRange(page);
 
-  const [total, admins, newThisWeek] = await Promise.all([
-    countProfiles(),
-    countProfiles().eq('role', 'admin'),
-    countProfiles().gte('created_at', weekAgo),
-  ]);
+  let query = supabase
+    .from('profiles')
+    .select('id, email, full_name, role, created_at, transactions(count)', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
-  return {
-    total: total.count ?? 0,
-    admins: admins.count ?? 0,
-    newThisWeek: newThisWeek.count ?? 0,
-  };
+  const term = search ? sanitizeSearch(search) : '';
+  if (term) query = query.or(`email.ilike.*${term}*,full_name.ilike.*${term}*`);
+  if (role) query = query.eq('role', role);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(`Failed to load users: ${error.message}`);
+
+  const rows: UserListItem[] = (data ?? []).map((row) => ({
+    id: row.id,
+    email: row.email,
+    fullName: row.full_name,
+    role: row.role,
+    createdAt: row.created_at,
+    txCount: row.transactions[0]?.count ?? 0,
+  }));
+  return { rows, total: count ?? 0 };
 }
 
-export async function listUsers(limit = 50) {
+export async function listRecentSignups(limit = 6) {
   await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, email, full_name, role, created_at')
+    .select('id, email, full_name, created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (error) {
-    throw new Error(`Failed to load users: ${error.message}`);
-  }
+  if (error) throw new Error(`Failed to load recent signups: ${error.message}`);
   return data;
 }

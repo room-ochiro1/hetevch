@@ -1,58 +1,105 @@
-import { formatMoney } from '@hetevch/shared';
-import { ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KIND_LABELS, formatNet } from '@hetevch/shared';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
+import { AppDrawer } from '@/components/drawer/app-drawer';
+import { KIND_OPTIONS, openNewTransaction } from '@/components/finance/kind-options';
+import { CategoryRows } from '@/components/overview/category-rows';
+import { PeriodCard } from '@/components/overview/period-card';
+import { useOverview } from '@/components/overview/use-overview';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useProfile } from '@/hooks/use-profile';
+import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
+import { Screen } from '@/components/ui/screen';
+import { Segmented } from '@/components/ui/segmented';
+import { StateMessage } from '@/components/ui/state-message';
+import { Spacing } from '@/constants/theme';
 
+/**
+ * The overview: balance, then where the money went for the chosen kind and period as a ring,
+ * then each category with its share. One tap on + (or a category) starts a new entry.
+ */
 export default function HomeScreen() {
-  const { profile } = useProfile();
-  const greetingName = profile?.full_name ?? profile?.email ?? '';
+  const overview = useOverview();
+  const kindLabel = KIND_LABELS[overview.kind].toLowerCase();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <ThemedText type="small" themeColor="textSecondary">
-            Сайн байна уу{greetingName ? `, ${greetingName}` : ''}
-          </ThemedText>
+    <Screen header={<BalanceHeader balance={overview.balance} onMenu={() => setMenuOpen(true)} />}>
+      <AppDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Segmented
+        options={KIND_OPTIONS}
+        value={overview.kind}
+        onChange={overview.setKind}
+        accessibilityLabel="Зарлага эсвэл орлого"
+      />
+      <PeriodCard overview={overview} />
 
-          <ThemedView type="backgroundElement" style={styles.balanceCard}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Нийт үлдэгдэл
-            </ThemedText>
-            <ThemedText type="subtitle">{formatMoney(0)}</ThemedText>
-          </ThemedView>
+      {overview.error ? (
+        <StateMessage
+          tone="error"
+          icon="⚠️"
+          title="Мэдээлэл ачаалж чадсангүй"
+          body="Интернэт холболтоо шалгаад доош татаж дахин оролдоно уу."
+        />
+      ) : !overview.loading && overview.shares.length === 0 ? (
+        <View style={styles.empty}>
+          <StateMessage
+            icon={overview.kind === 'expense' ? '🧾' : '💼'}
+            title={`Энэ хугацаанд ${kindLabel} бүртгэгдээгүй байна`}
+            body="Юу худалдаж авснаа, хэдэн төгрөг орж ирснийг тэмдэглээд мөнгөө хянаарай."
+          />
+          <Button
+            title={`+ ${KIND_LABELS[overview.kind]} нэмэх`}
+            onPress={() => openNewTransaction({ kind: overview.kind })}
+          />
+        </View>
+      ) : (
+        <CategoryRows shares={overview.shares} kind={overview.kind} />
+      )}
+    </Screen>
+  );
+}
 
-          <ThemedText themeColor="textSecondary">
-            Таны данс, гүйлгээ энд харагдана.
-          </ThemedText>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+type BalanceHeaderProps = { balance: number | null; onMenu: () => void };
+
+/** Centered hero figure: the one number the app leads with; the menu button sits at its left. */
+function BalanceHeader({ balance, onMenu }: BalanceHeaderProps) {
+  return (
+    <View>
+      <View style={styles.menu}>
+        <IconButton icon="menu" label="Цэс нээх" shape="square" onPress={onMenu} />
+      </View>
+      <View style={styles.hero} accessible accessibilityRole="header">
+        <ThemedText type="small" themeColor="textSecondary">
+          Үлдэгдэл
+        </ThemedText>
+        <ThemedText style={styles.balance} numberOfLines={1} adjustsFontSizeToFit>
+          {balance === null ? '—' : formatNet(balance).replace(/^\+/, '')}
+        </ThemedText>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  menu: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 1,
   },
-  safeArea: {
-    flex: 1,
+  hero: {
+    alignItems: 'center',
+    gap: Spacing.half,
+    paddingTop: Spacing.two,
   },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    padding: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.four,
-    gap: Spacing.four,
+  balance: {
+    fontSize: 40,
+    lineHeight: 48,
+    fontWeight: 700,
   },
-  balanceCard: {
-    padding: Spacing.four,
-    borderRadius: Spacing.four,
+  empty: {
     gap: Spacing.two,
   },
 });

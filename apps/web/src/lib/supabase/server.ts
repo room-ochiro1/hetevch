@@ -1,10 +1,11 @@
 import 'server-only';
 
-import type { Database } from '@hetevch/shared';
 import { createServerClient } from '@supabase/ssr';
+import { io } from 'next/cache';
 import { cookies } from 'next/headers';
 
 import { supabaseEnv } from '@/lib/env';
+import type { AdminDatabase } from '@/lib/supabase/types';
 
 /**
  * Supabase client for Server Components, Server Actions and Route Handlers.
@@ -12,9 +13,13 @@ import { supabaseEnv } from '@/lib/env';
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  // Supabase Auth reads the clock (Date.now()) to check the session's expiry. A prefetch
+  // prerender resolves cookies() but must not read the clock, so keep everything after
+  // this out of every prerender; during a real request io() resolves immediately.
+  await io();
   const { url, publishableKey } = supabaseEnv();
 
-  return createServerClient<Database>(url, publishableKey, {
+  return createServerClient<AdminDatabase>(url, publishableKey, {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll(cookiesToSet) {

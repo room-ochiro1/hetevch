@@ -1,20 +1,24 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'danger';
   loading?: boolean;
   disabled?: boolean;
 };
 
 export function Button({ title, onPress, variant = 'primary', loading, disabled }: ButtonProps) {
   const theme = useTheme();
-  const isPrimary = variant === 'primary';
   const isDisabled = disabled || loading;
+  const colors = {
+    primary: { background: theme.accent, label: theme.onAccent },
+    secondary: { background: theme.backgroundElement, label: theme.text },
+    danger: { background: theme.expenseSoft, label: theme.danger },
+  }[variant];
 
   return (
     <Pressable
@@ -24,13 +28,13 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor: isPrimary ? theme.accent : theme.backgroundElement },
+        { backgroundColor: colors.background },
         (pressed || isDisabled) && styles.dimmed,
       ]}>
       {loading ? (
-        <ActivityIndicator color={isPrimary ? '#ffffff' : theme.text} />
+        <ActivityIndicator color={colors.label} />
       ) : (
-        <Text style={[styles.label, { color: isPrimary ? '#ffffff' : theme.text }]}>{title}</Text>
+        <Text style={[styles.label, { color: colors.label }]}>{title}</Text>
       )}
     </Pressable>
   );
@@ -38,8 +42,8 @@ export function Button({ title, onPress, variant = 'primary', loading, disabled 
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: Radius.medium,
     paddingHorizontal: Spacing.four,
     alignItems: 'center',
     justifyContent: 'center',

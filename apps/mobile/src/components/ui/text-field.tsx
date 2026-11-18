@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type TextFieldProps = TextInputProps & {
@@ -14,10 +14,11 @@ export function TextField({ label, style, ...inputProps }: TextFieldProps) {
     <View style={styles.container}>
       <Text style={[styles.label, { color: theme.textSecondary }]}>{label}</Text>
       <TextInput
+        accessibilityLabel={label}
         placeholderTextColor={theme.textSecondary}
         style={[
           styles.input,
-          { color: theme.text, backgroundColor: theme.backgroundElement },
+          { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border },
           style,
         ]}
         {...inputProps}
@@ -28,15 +29,16 @@ export function TextField({ label, style, ...inputProps }: TextFieldProps) {
 
 const styles = StyleSheet.create({
   container: {
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   label: {
     fontSize: 14,
     fontWeight: 500,
   },
   input: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: Radius.medium,
+    borderWidth: 1,
     paddingHorizontal: Spacing.three,
     fontSize: 16,
   },

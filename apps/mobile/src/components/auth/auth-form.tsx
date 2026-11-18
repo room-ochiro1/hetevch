@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { supabase } from '@/lib/supabase';
 
 type Mode = 'sign-in' | 'sign-up';
@@ -15,6 +16,7 @@ export function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const isSignUp = mode === 'sign-up';
 
@@ -25,17 +27,22 @@ export function AuthForm() {
     }
     setLoading(true);
     setError(null);
+    setNotice(null);
     const credentials = { email: email.trim(), password };
-    const { error: authError } = isSignUp
+    const { data, error: authError } = isSignUp
       ? await supabase.auth.signUp({
           ...credentials,
           options: { data: { full_name: fullName.trim() || null } },
         })
       : await supabase.auth.signInWithPassword(credentials);
     setLoading(false);
-    // On success the auth listener updates the session and the router moves on.
+    // On success with a session the auth listener updates it and the router moves on.
     if (authError) {
-      setError(authError.message);
+      setError(authErrorMessage(authError.code));
+    } else if (isSignUp && !data.session) {
+      // Email confirmation is on: the account exists but cannot sign in until confirmed.
+      setNotice(`${credentials.email} хаяг руу баталгаажуулах захидал илгээлээ. Холбоосыг дараад нэвтэрнэ үү.`);
+      setMode('sign-in');
     }
   }
 
@@ -64,12 +71,18 @@ export function AuthForm() {
           {error}
         </ThemedText>
       ) : null}
+      {notice ? (
+        <ThemedText type="small" themeColor="income" accessibilityRole="alert">
+          {notice}
+        </ThemedText>
+      ) : null}
       <Button title={isSignUp ? 'Бүртгүүлэх' : 'Нэвтрэх'} onPress={submit} loading={loading} />
       <Button
         variant="secondary"
         title={isSignUp ? 'Бүртгэлтэй юу? Нэвтрэх' : 'Шинэ хэрэглэгч? Бүртгүүлэх'}
         onPress={() => {
           setError(null);
+          setNotice(null);
           setMode(isSignUp ? 'sign-in' : 'sign-up');
         }}
       />

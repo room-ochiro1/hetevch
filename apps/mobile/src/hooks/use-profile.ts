@@ -1,37 +1,22 @@
 import type { Profile } from '@hetevch/shared';
-import { useEffect, useState } from 'react';
 
+import { useSupabaseQuery, type QueryResult } from '@/hooks/use-supabase-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 
-/** Loads the signed-in user's own profile row (RLS limits it to their row). */
-export function useProfile() {
+/**
+ * The signed-in user's own profile row. Filtered by id because RLS lets an admin read every
+ * profile; reloads after `invalidate()` (e.g. once the name is edited).
+ */
+export function useProfile(): QueryResult<Profile> {
   const { session } = useAuth();
-  const userId = session?.user.id;
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const userId = session?.user.id ?? null;
 
-  useEffect(() => {
-    if (!userId) {
-      return;
-    }
-    let cancelled = false;
-
+  return useSupabaseQuery<Profile>(userId && `profile:${userId}`, async () =>
     supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
-      .single()
-      .then(({ data, error: queryError }) => {
-        if (cancelled) return;
-        setProfile(data);
-        setError(queryError?.message ?? null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
-  return { profile, error };
+      .eq('id', userId ?? '')
+      .single(),
+  );
 }

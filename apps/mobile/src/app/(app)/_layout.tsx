@@ -8,11 +8,20 @@ export default function AppTabsLayout() {
   return (
     <NativeTabs
       backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      indicatorColor={colors.accentSoft}
+      tintColor={colors.accentText}
+      labelStyle={{ selected: { color: colors.accentText } }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Нүүр</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="transactions">
+        <NativeTabs.Trigger.Label>Гүйлгээ</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'list.bullet.rectangle', selected: 'list.bullet.rectangle.fill' }}
+          md="receipt_long"
+        />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
