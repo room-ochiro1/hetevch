@@ -1,105 +1,77 @@
-import { KIND_LABELS, formatNet } from '@hetevch/shared';
+import { formatAmount, parseAmount } from '@hetevch/shared';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppDrawer } from '@/components/drawer/app-drawer';
-import { KIND_OPTIONS, openNewTransaction } from '@/components/finance/kind-options';
-import { CategoryRows } from '@/components/overview/category-rows';
-import { PeriodCard } from '@/components/overview/period-card';
-import { useOverview } from '@/components/overview/use-overview';
-import { ThemedText } from '@/components/themed-text';
-import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
-import { Screen } from '@/components/ui/screen';
-import { Segmented } from '@/components/ui/segmented';
-import { StateMessage } from '@/components/ui/state-message';
-import { Spacing } from '@/constants/theme';
+import { openNewTransaction } from '@/components/finance/kind-options';
+import { AmountDisplay } from '@/components/home/amount-display';
+import { HomeActions } from '@/components/home/home-actions';
+import { HomeTopBar } from '@/components/home/home-top-bar';
+import { Keypad } from '@/components/home/keypad';
+import { useAmountPad } from '@/components/home/use-amount-pad';
+import { ThemedView } from '@/components/themed-view';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useMoney } from '@/hooks/use-money';
 
 /**
- * The overview: balance, then where the money went for the chosen kind and period as a ring,
- * then each category with its share. One tap on + (or a category) starts a new entry.
+ * Home is a number pad: type how much, then say what it was (Зарлага / Орлого). The sheet that
+ * opens only asks for the category, so logging takes a few taps. The avatar opens the side menu.
  */
 export default function HomeScreen() {
-  const overview = useOverview();
-  const kindLabel = KIND_LABELS[overview.kind].toLowerCase();
+  const insets = useSafeAreaInsets();
+  const money = useMoney();
+  const pad = useAmountPad(money.currency === 'USD');
   const [menuOpen, setMenuOpen] = useState(false);
+  const typed = parseAmount(pad.text);
+
+  const hint = pad.isEmpty
+    ? 'Дүнгээ бичээд Зарлага эсвэл Орлого дарна уу'
+    : money.currency !== 'MNT' && typed !== null
+      ? `≈ ${formatAmount(Math.round(money.toBase(typed)), 'MNT')}`
+      : undefined;
+
+  /** Hand the amount over and start fresh for the next one. */
+  function use(open: (amount: string | undefined) => void) {
+    open(pad.isEmpty ? undefined : pad.text);
+    pad.clear();
+  }
 
   return (
-    <Screen header={<BalanceHeader balance={overview.balance} onMenu={() => setMenuOpen(true)} />}>
-      <AppDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <Segmented
-        options={KIND_OPTIONS}
-        value={overview.kind}
-        onChange={overview.setKind}
-        accessibilityLabel="Зарлага эсвэл орлого"
-      />
-      <PeriodCard overview={overview} />
-
-      {overview.error ? (
-        <StateMessage
-          tone="error"
-          icon="⚠️"
-          title="Мэдээлэл ачаалж чадсангүй"
-          body="Интернэт холболтоо шалгаад доош татаж дахин оролдоно уу."
-        />
-      ) : !overview.loading && overview.shares.length === 0 ? (
-        <View style={styles.empty}>
-          <StateMessage
-            icon={overview.kind === 'expense' ? '🧾' : '💼'}
-            title={`Энэ хугацаанд ${kindLabel} бүртгэгдээгүй байна`}
-            body="Юу худалдаж авснаа, хэдэн төгрөг орж ирснийг тэмдэглээд мөнгөө хянаарай."
-          />
-          <Button
-            title={`+ ${KIND_LABELS[overview.kind]} нэмэх`}
-            onPress={() => openNewTransaction({ kind: overview.kind })}
+    <ThemedView style={styles.fill}>
+      <SafeAreaView style={styles.fill} edges={['top']}>
+        <View
+          style={[
+            styles.content,
+            // iOS draws the tab bar over the screen; Android lays the screen out above it.
+            { paddingBottom: Platform.OS === 'ios' ? BottomTabInset + insets.bottom : Spacing.three },
+          ]}>
+          <HomeTopBar onOpenMenu={() => setMenuOpen(true)} />
+          <View style={styles.display}>
+            <AmountDisplay text={pad.text} symbol={money.symbol} hint={hint} />
+          </View>
+          <Keypad onKey={pad.press} onClear={pad.clear} decimal={money.currency === 'USD'} />
+          <HomeActions
+            onExpense={() => use((amount) => openNewTransaction({ kind: 'expense', amount }))}
+            onIncome={() => use((amount) => openNewTransaction({ kind: 'income', amount }))}
           />
         </View>
-      ) : (
-        <CategoryRows shares={overview.shares} kind={overview.kind} />
-      )}
-    </Screen>
-  );
-}
-
-type BalanceHeaderProps = { balance: number | null; onMenu: () => void };
-
-/** Centered hero figure: the one number the app leads with; the menu button sits at its left. */
-function BalanceHeader({ balance, onMenu }: BalanceHeaderProps) {
-  return (
-    <View>
-      <View style={styles.menu}>
-        <IconButton icon="menu" label="Цэс нээх" shape="square" onPress={onMenu} />
-      </View>
-      <View style={styles.hero} accessible accessibilityRole="header">
-        <ThemedText type="small" themeColor="textSecondary">
-          Үлдэгдэл
-        </ThemedText>
-        <ThemedText style={styles.balance} numberOfLines={1} adjustsFontSizeToFit>
-          {balance === null ? '—' : formatNet(balance).replace(/^\+/, '')}
-        </ThemedText>
-      </View>
-    </View>
+      </SafeAreaView>
+      <AppDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  menu: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 1,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: Spacing.half,
+  fill: { flex: 1 },
+  content: {
+    flex: 1,
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
+    gap: Spacing.three,
   },
-  balance: {
-    fontSize: 40,
-    lineHeight: 48,
-    fontWeight: 700,
-  },
-  empty: {
-    gap: Spacing.two,
-  },
+  display: { flex: 1, justifyContent: 'center' },
 });

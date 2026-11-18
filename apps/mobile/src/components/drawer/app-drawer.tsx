@@ -20,8 +20,9 @@ type AppDrawerProps = {
 };
 
 /**
- * Side menu that slides in from the left over everything, tab bar included. Closes on a tap
- * outside, the back button, or a swipe to the left. Navigation waits until it has slid away.
+ * Side menu that slides in from the right (under the avatar that opens it) over everything,
+ * tab bar included. Closes on a tap outside, the back button, or a swipe to the right.
+ * Navigation waits until it has slid away.
  */
 export function AppDrawer({ open, onClose }: AppDrawerProps) {
   const theme = useTheme();
@@ -55,10 +56,10 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
   const swipe = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) => g.dx < -8 && Math.abs(g.dx) > Math.abs(g.dy),
-        onPanResponderMove: (_, g) => progress.setValue(Math.min(1, Math.max(0, 1 + g.dx / width))),
+        onMoveShouldSetPanResponder: (_, g) => g.dx > 8 && Math.abs(g.dx) > Math.abs(g.dy),
+        onPanResponderMove: (_, g) => progress.setValue(Math.min(1, Math.max(0, 1 - g.dx / width))),
         onPanResponderRelease: (_, g) => {
-          if (g.dx < -width / 3 || g.vx < -0.5) onClose();
+          if (g.dx > width / 3 || g.vx > 0.5) onClose();
           else Animated.spring(progress, { toValue: 1, useNativeDriver: true }).start();
         },
       }),
@@ -70,7 +71,7 @@ export function AppDrawer({ open, onClose }: AppDrawerProps) {
     onClose();
   }
 
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-width, 0] });
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
   const scrim = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 0.45] });
 
   return (
@@ -117,10 +118,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     bottom: 0,
-    left: 0,
-    flexDirection: 'row',
-    borderTopRightRadius: 28,
-    borderBottomRightRadius: 28,
+    right: 0,
+    // Rail on the outer (right) edge, like the left-hand original mirrored.
+    flexDirection: 'row-reverse',
+    borderTopLeftRadius: 28,
+    borderBottomLeftRadius: 28,
     overflow: 'hidden',
   },
 });

@@ -1,4 +1,4 @@
-import { COMPOUNDING_LABELS, formatAmountInput, type Compounding } from '@hetevch/shared';
+import { COMPOUNDING_LABELS, formatAmountInput, type Compounding, type Currency } from '@hetevch/shared';
 import { StyleSheet, View } from 'react-native';
 
 import { CalculatorResults } from '@/components/savings/calculator-results';
@@ -14,6 +14,7 @@ import { Segmented, type SegmentOption } from '@/components/ui/segmented';
 import { StateMessage } from '@/components/ui/state-message';
 import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
+import { useMoney } from '@/hooks/use-money';
 
 const UNITS: readonly SegmentOption<DurationUnit>[] = [
   { value: 'day', label: 'Өдөр' },
@@ -21,10 +22,16 @@ const UNITS: readonly SegmentOption<DurationUnit>[] = [
   { value: 'year', label: 'Жил' },
 ];
 
-const AMOUNTS: readonly ChipOption<string>[] = [1, 5, 10, 50].map((millions) => ({
-  value: formatAmountInput(String(millions * 1_000_000)),
-  label: `${millions} сая`,
-}));
+const AMOUNTS: Record<Currency, readonly ChipOption<string>[]> = {
+  MNT: [1, 5, 10, 50].map((millions) => ({
+    value: formatAmountInput(String(millions * 1_000_000)),
+    label: `${millions} сая`,
+  })),
+  USD: [1000, 5000, 10000, 50000].map((dollars) => ({
+    value: formatAmountInput(String(dollars)),
+    label: '$' + formatAmountInput(String(dollars)),
+  })),
+};
 
 const COMPOUNDING_OPTIONS: readonly SegmentOption<Compounding>[] = (['monthly', 'simple'] as const).map(
   (value) => ({ value, label: COMPOUNDING_LABELS[value] }),
@@ -35,19 +42,20 @@ const UNIT_WORD: Record<DurationUnit, string> = { day: 'хоног', month: 'с�
 /** "How much will my savings earn?" — amount, rate and time in; the answer updates as you type. */
 export default function CalculatorScreen() {
   const calc = useCalculator();
+  const { currency, symbol } = useMoney();
 
   return (
     <Page>
       <View style={styles.field}>
         <TextField
-          label="Хадгалах дүн (₮)"
+          label={`Хадгалах дүн (${symbol})`}
           value={calc.amountText}
           onChangeText={calc.setAmountText}
           placeholder="5,000,000"
           keyboardType="decimal-pad"
         />
         <ChoiceChips
-          options={AMOUNTS}
+          options={AMOUNTS[currency]}
           value={calc.amountText}
           onChange={calc.setAmountText}
           accessibilityLabel="Түгээмэл дүн"
@@ -108,7 +116,7 @@ export default function CalculatorScreen() {
       </View>
 
       {calc.result ? (
-        <CalculatorResults result={calc.result} />
+        <CalculatorResults result={calc.result} currency={currency} />
       ) : (
         <StateMessage
           icon="🧮"

@@ -1,10 +1,11 @@
-import { formatDayLabel, formatSignedMoney, type TransactionListItem } from '@hetevch/shared';
+import { formatDayLabel, type TransactionListItem } from '@hetevch/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CategoryIcon } from '@/components/finance/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
+import { useMoney } from '@/hooks/use-money';
 import { useTheme } from '@/hooks/use-theme';
 
 type TransactionRowProps = {
@@ -23,7 +24,7 @@ function formatClock(timestamp: string): string {
 export function TransactionRow({ item, showDate }: TransactionRowProps) {
   const theme = useTheme();
   const name = item.category?.name ?? 'Ангилалгүй';
-  const amount = formatSignedMoney(item);
+  const amount = useMoney().forKind(item);
   const when = showDate ? formatDayLabel(item.occurred_on) : formatClock(item.created_at);
 
   return (

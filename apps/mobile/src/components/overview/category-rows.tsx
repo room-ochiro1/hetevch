@@ -1,4 +1,4 @@
-import { formatMoney, type CategoryShare, type CategorySummary, type TransactionKind } from '@hetevch/shared';
+import { type CategoryShare, type CategorySummary, type TransactionKind } from '@hetevch/shared';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CategoryIcon } from '@/components/finance/category-icon';
@@ -6,6 +6,7 @@ import { openNewTransaction } from '@/components/finance/kind-options';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useCategoryColor } from '@/hooks/use-category-color';
+import { useMoney } from '@/hooks/use-money';
 import { useTheme } from '@/hooks/use-theme';
 
 type CategoryRowsProps = {
@@ -20,6 +21,7 @@ type CategoryRowsProps = {
 export function CategoryRows({ shares, kind }: CategoryRowsProps) {
   const theme = useTheme();
   const { colorOf } = useCategoryColor();
+  const money = useMoney();
 
   return (
     <View style={styles.list}>
@@ -32,7 +34,7 @@ export function CategoryRows({ shares, kind }: CategoryRowsProps) {
           <Pressable
             key={category.id}
             accessibilityRole="button"
-            accessibilityLabel={`${category.name}: ${formatMoney(total)}, ${percent} хувь`}
+            accessibilityLabel={`${category.name}: ${money.format(total)}, ${percent} хувь`}
             accessibilityHint={`${category.name} ангилалд шинэ гүйлгээ нэмнэ`}
             onPress={() => openNewTransaction({ kind, categoryId: category.id })}
             style={({ pressed }) => [
@@ -46,7 +48,7 @@ export function CategoryRows({ shares, kind }: CategoryRowsProps) {
                   {category.name}
                 </ThemedText>
                 <ThemedText type="smallBold" style={styles.tabular}>
-                  {formatMoney(total)}
+                  {money.format(total)}
                 </ThemedText>
                 <ThemedText type="caption" themeColor="textSecondary" style={styles.percent}>
                   {percent}%

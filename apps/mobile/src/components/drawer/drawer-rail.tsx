@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemeSwitch } from '@/components/drawer/theme-switch';
 import { Icon, type IconName } from '@/components/ui/icon';
+import { Logo } from '@/components/ui/logo';
 import { Radius, Spacing } from '@/constants/theme';
-import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
 
 type Go = (after?: () => void) => void;
@@ -15,17 +15,13 @@ const TABS: readonly { icon: IconName; label: string; open?: () => void }[] = [
   { icon: 'profile', label: 'Профайл', open: () => router.navigate('/profile') },
 ];
 
-/** The narrow column: logo, the app's three tabs, the light/dark switch and the avatar. */
+/** The narrow outer column: logo, three main tabs and the light/dark switch. */
 export function DrawerRail({ go }: { go: Go }) {
   const theme = useTheme();
-  const { data: profile } = useProfile();
-  const initial = (profile?.full_name?.trim() || profile?.email || '?').charAt(0).toUpperCase();
 
   return (
     <View style={[styles.rail, { borderColor: theme.border }]}>
-      <View style={[styles.logo, { backgroundColor: theme.accent }]}>
-        <Text style={styles.logoGlyph}>👛</Text>
-      </View>
+      <Logo size={44} />
 
       <View style={styles.tabs}>
         {TABS.map((tab, index) => {
@@ -48,13 +44,6 @@ export function DrawerRail({ go }: { go: Go }) {
       <View style={styles.bottom}>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <ThemeSwitch />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Хувийн мэдээлэл"
-          onPress={() => go(() => router.push('/settings/account'))}
-          style={[styles.avatar, { backgroundColor: theme.peach }]}>
-          <Text style={[styles.avatarText, { color: theme.peachInk }]}>{initial}</Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -65,18 +54,7 @@ const styles = StyleSheet.create({
     width: 76,
     alignItems: 'center',
     paddingVertical: Spacing.three,
-    borderRightWidth: StyleSheet.hairlineWidth,
-  },
-  logo: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoGlyph: {
-    fontSize: 22,
-    lineHeight: 28,
+    borderLeftWidth: StyleSheet.hairlineWidth,
   },
   tabs: {
     marginTop: Spacing.six,
@@ -98,16 +76,5 @@ const styles = StyleSheet.create({
     width: 44,
     height: StyleSheet.hairlineWidth,
     marginBottom: Spacing.two,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: 700,
   },
 });

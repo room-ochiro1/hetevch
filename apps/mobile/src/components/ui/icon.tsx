@@ -18,6 +18,8 @@ export const ICONS = {
   menu: { ios: 'line.3.horizontal', android: 'menu' },
   close: { ios: 'xmark', android: 'close' },
   add: { ios: 'plus', android: 'add' },
+  check: { ios: 'checkmark', android: 'check' },
+  backspace: { ios: 'delete.left', android: 'backspace' },
 } as const satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

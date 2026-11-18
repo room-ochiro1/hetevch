@@ -1,6 +1,5 @@
 import {
   formatDayLabel,
-  formatNet,
   groupByDay,
   type TransactionListItem,
 } from '@hetevch/shared';
@@ -9,6 +8,7 @@ import { StyleSheet, View } from 'react-native';
 import { TransactionRow } from '@/components/finance/transaction-row';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { useMoney } from '@/hooks/use-money';
 
 type TransactionListProps = {
   items: readonly TransactionListItem[];
@@ -17,6 +17,8 @@ type TransactionListProps = {
 };
 
 export function TransactionList({ items, grouped = false }: TransactionListProps) {
+  const money = useMoney();
+
   if (!grouped) {
     return <Rows items={items} showDate />;
   }
@@ -30,7 +32,7 @@ export function TransactionList({ items, grouped = false }: TransactionListProps
               {formatDayLabel(group.day)}
             </ThemedText>
             <ThemedText type="caption" themeColor="textSecondary" style={styles.tabular}>
-              {formatNet(group.net)}
+              {money.net(group.net)}
             </ThemedText>
           </View>
           <Rows items={group.items} />

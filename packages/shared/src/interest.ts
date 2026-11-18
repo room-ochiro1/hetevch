@@ -83,29 +83,6 @@ export function spanBetween(from: string, to: string): Span {
   return { months, days: daysBetween(addMonths(from, months), to) };
 }
 
-export type TrackedDeposit = Deposit & { startDate: string; termMonths: number | null };
-
-/** Where a tracked deposit stands today: interest so far, maturity, and how far along it is. */
-export function depositStatus(deposit: TrackedDeposit, today: string) {
-  const { startDate, termMonths, principal } = deposit;
-  const maturity = termMonths ? addMonths(startDate, termMonths) : null;
-  // Interest stops at maturity; a start date in the future has earned nothing yet.
-  const until = maturity && maturity < today ? maturity : today;
-  const accrued = until > startDate ? interestFor(deposit, spanBetween(startDate, until)) : 0;
-  const totalDays = maturity ? daysBetween(startDate, maturity) : 0;
-  return {
-    accrued,
-    balance: principal + accrued,
-    maturity,
-    atMaturity: termMonths ? balanceAfter(deposit, { months: termMonths, days: 0 }) : null,
-    daysLeft: maturity ? Math.max(0, daysBetween(today, maturity)) : null,
-    /** 0–1 share of the term that has passed; null without a term. */
-    progress: maturity
-      ? Math.min(1, Math.max(0, daysBetween(startDate, until) / Math.max(1, totalDays)))
-      : null,
-  };
-}
-
 /** "12.5%" — at most two decimals, no trailing zeros. */
 export function formatRate(percent: number): string {
   return `${Number(percent.toFixed(2))}%`;

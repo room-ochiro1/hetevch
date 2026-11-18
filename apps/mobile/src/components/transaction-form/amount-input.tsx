@@ -1,21 +1,28 @@
-import { formatAmountInput, type TransactionKind } from '@hetevch/shared';
+import { CURRENCY_INFO, formatAmountInput, type Currency, type TransactionKind } from '@hetevch/shared';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-/** Common round amounts: one tap instead of typing. */
-const QUICK_AMOUNTS = [1000, 5000, 10000, 20000, 50000];
+/** Common round amounts per currency: one tap instead of typing. */
+const QUICK_AMOUNTS: Record<Currency, readonly number[]> = {
+  MNT: [1000, 5000, 10000, 20000, 50000],
+  USD: [1, 5, 10, 20, 50],
+};
 
 type AmountInputProps = {
   value: string;
   onChangeText: (text: string) => void;
   kind: TransactionKind;
+  /** The currency being typed in (the user's display currency). */
+  currency: Currency;
+  /** Small line under the amount, e.g. what it is in tögrög. */
+  hint?: string;
   autoFocus?: boolean;
 };
 
 /** The big centered amount (grouped as you type), tinted by kind, plus quick-amount chips. */
-export function AmountInput({ value, onChangeText, kind, autoFocus }: AmountInputProps) {
+export function AmountInput({ value, onChangeText, kind, currency, hint, autoFocus }: AmountInputProps) {
   const theme = useTheme();
   const color = kind === 'income' ? theme.income : theme.text;
 
@@ -34,22 +41,27 @@ export function AmountInput({ value, onChangeText, kind, autoFocus }: AmountInpu
           maxLength={20}
           style={[styles.input, { color }]}
         />
-        <Text style={[styles.currency, { color: theme.textSecondary }]}>₮</Text>
+        <Text style={[styles.currency, { color: theme.textSecondary }]}>
+          {CURRENCY_INFO[currency].symbol}
+        </Text>
       </View>
+      {hint ? (
+        <Text style={[styles.hint, { color: theme.textSecondary }]}>{hint}</Text>
+      ) : null}
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.chips}>
-        {QUICK_AMOUNTS.map((amount) => {
+        {QUICK_AMOUNTS[currency].map((amount) => {
           const label = formatAmountInput(String(amount));
           const selected = value === label;
           return (
             <Pressable
               key={amount}
               accessibilityRole="button"
-              accessibilityLabel={`${label} төгрөг`}
+              accessibilityLabel={`${label} ${CURRENCY_INFO[currency].label.toLowerCase()}`}
               accessibilityState={{ selected }}
               onPress={() => onChangeText(label)}
               style={({ pressed }) => [
@@ -71,6 +83,11 @@ export function AmountInput({ value, onChangeText, kind, autoFocus }: AmountInpu
 const styles = StyleSheet.create({
   container: {
     gap: Spacing.three,
+  },
+  hint: {
+    textAlign: 'center',
+    fontSize: 13,
+    marginTop: -Spacing.two,
   },
   row: {
     flexDirection: 'row',

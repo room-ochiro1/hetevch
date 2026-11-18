@@ -54,3 +54,7 @@ Add dependencies with `pnpm --filter @hetevch/web add <pkg>` (web) or `npx expo 
 - `mobile-screen` — a new screen in the Expo app
 - `split-file` — how to break up a file that is near 160 lines
 - `deploy` — Vercel (web) and EAS (mobile)
+- `research` — research UX, finance facts and APIs before building; cite sources (findings log inside)
+- `hosted-sql` — apply migrations to hosted Supabase without the CLI (paste script + PGlite dry run)
+- `verify-mobile` — prove a mobile change works: Metro bundle, routes, emulator screenshots/logs
+- `money-and-dates` — base currency ₮, `useMoney()`, interest method, Mongolian dates

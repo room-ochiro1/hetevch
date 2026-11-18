@@ -1,27 +1,22 @@
-import { authErrorMessage } from '@/lib/auth-errors';
 import { supabase } from '@/lib/supabase';
-
-/** Supabase Auth's default minimum; the server checks it too. */
-export const MIN_PASSWORD_LENGTH = 6;
 
 /** Each action returns a Mongolian error message, or null when it worked. */
 
-export async function updateFullName(userId: string, fullName: string): Promise<string | null> {
+/** Saves the name and birth year (the only profile fields users may change). */
+export async function updateProfile(
+  userId: string,
+  fields: { fullName: string; birthYear: number | null },
+): Promise<string | null> {
   const { error } = await supabase
     .from('profiles')
-    .update({ full_name: fullName.trim() || null })
+    .update({ full_name: fields.fullName.trim() || null, birth_year: fields.birthYear })
     .eq('id', userId);
-  return error ? 'Нэрийг хадгалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.' : null;
-}
-
-export async function changePassword(password: string): Promise<string | null> {
-  const { error } = await supabase.auth.updateUser({ password });
-  return error ? authErrorMessage(error.code) : null;
+  return error ? 'Хадгалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.' : null;
 }
 
 /**
- * Deletes the account and every transaction in it (see the delete_my_account migration),
- * then clears the session on this device; the router then shows the sign-in screen.
+ * Deletes the account and everything in it (see the delete_my_account migration), then clears
+ * the session on this device; the app then starts over with the welcome form.
  */
 export async function deleteAccount(): Promise<string | null> {
   const { error } = await supabase.rpc('delete_my_account');

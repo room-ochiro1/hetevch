@@ -1,104 +1,50 @@
-import { COMPOUNDING_LABELS, formatMoney, type Compounding, type SavingsAccount } from '@hetevch/shared';
+import { formatAmount, type SavingsCard } from '@hetevch/shared';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { DateField } from '@/components/savings/date-field';
+import { CardStyleFields } from '@/components/savings/card-style-fields';
+import { InterestFields } from '@/components/savings/interest-fields';
+import { SavingsCardView } from '@/components/savings/savings-card-view';
 import { useSavingsForm, type SavingsPreset } from '@/components/savings/use-savings-form';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { ChoiceChips, type ChipOption } from '@/components/ui/choice-chips';
-import { Segmented, type SegmentOption } from '@/components/ui/segmented';
-import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
 
-const BANKS: readonly ChipOption<string>[] = ['Хаан банк', 'Голомт банк', 'ХасБанк', 'ХХБ', 'Төрийн банк'].map(
-  (bank) => ({ value: bank, label: bank }),
-);
+type SavingsFormProps = { initial?: SavingsCard; preset?: SavingsPreset };
 
-const TERMS: readonly ChipOption<number | null>[] = [
-  { value: null, label: 'Хугацаагүй' },
-  ...[3, 6, 12, 18, 24].map((months) => ({ value: months, label: `${months} сар` })),
-];
-
-const COMPOUNDING_OPTIONS: readonly SegmentOption<Compounding>[] = (['monthly', 'simple'] as const).map(
-  (value) => ({ value, label: COMPOUNDING_LABELS[value] }),
-);
-
-type SavingsFormProps = { initial?: SavingsAccount; preset?: SavingsPreset };
-
+/** Add or edit a card. The card on top is a live preview of what is being filled in. */
 export function SavingsForm({ initial, preset }: SavingsFormProps) {
   const form = useSavingsForm(initial, preset);
+  const { card, values } = form;
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <TextField
-          label="Дүн (₮)"
-          value={form.amountText}
-          onChangeText={form.setAmountText}
-          placeholder="5,000,000"
-          keyboardType="decimal-pad"
-          autoFocus={!initial && !preset?.principal}
+        <SavingsCardView
+          name={card.name}
+          icon={card.icon}
+          color={card.color}
+          caption={form.interest.bank || null}
+          balanceText={formatAmount(values.principal, card.currency)}
+          goal={
+            values.goalAmount
+              ? {
+                  progress: Math.min(1, values.principal / values.goalAmount),
+                  label: `Зорилго ${formatAmount(values.goalAmount, card.currency)}`,
+                }
+              : null
+          }
         />
-        <TextField
-          label="Жилийн хүү (%)"
-          value={form.rateText}
-          onChangeText={form.setRateText}
-          placeholder="12.5"
-          keyboardType="decimal-pad"
-        />
-        {form.preview ? (
-          <Card tone="mint" style={styles.preview}>
-            <ThemedText type="small" themeColor="mintInk">
-              Өдөрт {formatMoney(Math.round(form.preview.day))} · Сард{' '}
-              {formatMoney(Math.round(form.preview.month))} · Жилд{' '}
-              {formatMoney(Math.round(form.preview.year))}
-            </ThemedText>
-          </Card>
-        ) : null}
 
-        <View style={styles.field}>
-          <ThemedText type="small" themeColor="textSecondary">
-            Хүү бодох арга
-          </ThemedText>
-          <Segmented
-            options={COMPOUNDING_OPTIONS}
-            value={form.compounding}
-            onChange={form.setCompounding}
-            accessibilityLabel="Хүү бодох арга"
-          />
-        </View>
+        <ThemedText type="heading">Карт</ThemedText>
+        <CardStyleFields card={card} />
 
-        <View style={styles.field}>
-          <ThemedText type="small" themeColor="textSecondary">
-            Хугацаа
-          </ThemedText>
-          <ChoiceChips
-            options={TERMS}
-            value={form.termMonths}
-            onChange={form.setTermMonths}
-            accessibilityLabel="Хугацаа"
-          />
-        </View>
-
-        <DateField label="Эхэлсэн огноо" value={form.startDate} onChange={form.setStartDate} />
-
-        <View style={styles.field}>
-          <TextField label="Банк (заавал биш)" value={form.bank} onChangeText={form.setBank} />
-          <ChoiceChips options={BANKS} value={form.bank} onChange={form.setBank} accessibilityLabel="Банк" />
-        </View>
-        <TextField
-          label="Нэр (заавал биш)"
-          value={form.name}
-          onChangeText={form.setName}
-          placeholder="Жишээ нь: Хүүхдийн хадгаламж"
-          maxLength={60}
-        />
+        <ThemedText type="heading">Мөнгө ба хүү</ThemedText>
+        <InterestFields interest={form.interest} values={values} currency={card.currency} />
 
         {form.isEditing ? (
           <Button
             variant="danger"
-            title="Устгах"
+            title="Картыг устгах"
             onPress={form.confirmDelete}
             loading={form.busy === 'deleting'}
             disabled={form.busy !== null}
@@ -113,7 +59,7 @@ export function SavingsForm({ initial, preset }: SavingsFormProps) {
           </ThemedText>
         ) : null}
         <Button
-          title={form.isEditing ? 'Хадгалах' : 'Нэмэх'}
+          title={form.isEditing ? 'Хадгалах' : 'Карт үүсгэх'}
           onPress={form.submit}
           loading={form.busy === 'saving'}
           disabled={form.busy !== null}
@@ -126,7 +72,5 @@ export function SavingsForm({ initial, preset }: SavingsFormProps) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: Spacing.four, gap: Spacing.four },
-  field: { gap: Spacing.two },
-  preview: { paddingVertical: Spacing.two },
   footer: { paddingHorizontal: Spacing.four, paddingVertical: Spacing.three, gap: Spacing.two },
 });

@@ -1,4 +1,4 @@
-import { INTEREST_TAX_RATE, formatMoney, formatRate } from '@hetevch/shared';
+import { INTEREST_TAX_RATE, formatAmount, formatRate, type Currency } from '@hetevch/shared';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -11,11 +11,13 @@ import { Card } from '@/components/ui/card';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-const money = (value: number) => formatMoney(Math.round(value));
+type CalculatorResultsProps = { result: CalculatorResult; currency: Currency };
 
 /** The answer first (final amount), then how it splits, then the per-period figures. */
-export function CalculatorResults({ result }: { result: CalculatorResult }) {
+export function CalculatorResults({ result, currency }: CalculatorResultsProps) {
   const theme = useTheme();
+  const money = (value: number) =>
+    formatAmount(currency === 'MNT' ? Math.round(value) : value, currency);
   const interestShare = result.balance > 0 ? result.interest / result.balance : 0;
 
   function saveAsDeposit() {
@@ -25,6 +27,7 @@ export function CalculatorResults({ result }: { result: CalculatorResult }) {
         principal: String(Math.round(result.principal)),
         rate: String(result.annualRate),
         compounding: result.compounding,
+        currency,
         ...(result.termMonths ? { term: String(result.termMonths) } : {}),
       },
     });

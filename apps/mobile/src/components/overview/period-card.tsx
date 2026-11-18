@@ -1,4 +1,4 @@
-import { KIND_LABELS, PERIOD_LABELS, PERIODS, formatMoney, type Period } from '@hetevch/shared';
+import { KIND_LABELS, PERIOD_LABELS, PERIODS, type Period } from '@hetevch/shared';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { openNewTransaction } from '@/components/finance/kind-options';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { IconButton } from '@/components/ui/icon-button';
 import { Segmented, type SegmentOption } from '@/components/ui/segmented';
 import { Radius, Spacing } from '@/constants/theme';
+import { useMoney } from '@/hooks/use-money';
 import { useTheme } from '@/hooks/use-theme';
 
 const PERIOD_OPTIONS: readonly SegmentOption<Period>[] = PERIODS.map((p) => ({
@@ -20,7 +21,8 @@ const PERIOD_OPTIONS: readonly SegmentOption<Period>[] = PERIODS.map((p) => ({
 export function PeriodCard({ overview }: { overview: Overview }) {
   const theme = useTheme();
   const kindLabel = KIND_LABELS[overview.kind].toLowerCase();
-  const totalText = overview.loading ? '—' : formatMoney(overview.total);
+  const money = useMoney();
+  const totalText = overview.loading ? '—' : money.format(overview.total);
   const summary = overview.shares
     .slice(0, 3)
     .map((s) => `${s.category.name} ${Math.round(s.share * 100)}%`)

@@ -1,6 +1,8 @@
 import {
+  formatAmount,
   formatAmountInput,
   parseAmount,
+  roundAmount,
   toISODate,
   type Category,
   type TransactionKind,
@@ -10,10 +12,16 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Keyboard } from 'react-native';
 
+import { useMoney } from '@/hooks/use-money';
 import { deleteTransaction, saveTransaction } from '@/lib/transactions';
 import { useFinanceData } from '@/providers/finance-data';
 
-export type FormPreset = { kind?: TransactionKind; categoryId?: string };
+export type FormPreset = {
+  kind?: TransactionKind;
+  categoryId?: string;
+  /** Amount typed on the home keypad, in the display currency. */
+  amount?: string;
+};
 
 type Options = {
   /** The transaction being edited; undefined when adding a new one. */
@@ -31,9 +39,19 @@ export function useTransactionForm({ initial, preset, categories }: Options) {
     ? (preset?.categoryId ?? null)
     : null;
   const [kind, setKindState] = useState<TransactionKind>(startKind);
-  const [amountText, setAmountText] = useState(
-    initial ? formatAmountInput(String(initial.amount)) : '',
+  const money = useMoney();
+  // Amounts are typed in the display currency and stored in tögrög.
+  const [initialText] = useState(() =>
+    initial ? formatAmountInput(String(roundAmount(money.convert(initial.amount) ?? initial.amount))) : '',
   );
+  const [amountText, setAmountText] = useState(
+    initialText || (preset?.amount ? formatAmountInput(preset.amount) : ''),
+  );
+  const typed = parseAmount(amountText);
+  const amountHint =
+    money.currency !== 'MNT' && typed !== null
+      ? `≈ ${formatAmount(Math.round(money.toBase(typed)), 'MNT')}`
+      : undefined;
   const [categoryId, setCategoryIdState] = useState<string | null>(
     initial?.category_id ?? presetCategory,
   );
@@ -64,8 +82,10 @@ export function useTransactionForm({ initial, preset, categories }: Options) {
   }
 
   async function submit() {
-    const amount = parseAmount(amountText);
-    if (amount === null) {
+    // Untouched while editing: keep the stored tögrög exactly (no round trip through the rate).
+    const amount =
+      initial && amountText === initialText ? initial.amount : typed && money.toBase(typed);
+    if (!amount) {
       setError('Дүнгээ зөв оруулна уу. Жишээ нь: 12500');
       return;
     }
@@ -105,10 +125,14 @@ export function useTransactionForm({ initial, preset, categories }: Options) {
 
   return {
     isEditing: Boolean(initial),
+    /** The amount came from the keypad: open on the categories, not the keyboard. */
+    hasPresetAmount: Boolean(preset?.amount),
     kind,
     setKind,
     amountText,
     setAmountText,
+    amountHint,
+    currency: money.currency,
     categoryId,
     setCategoryId,
     visibleCategories,

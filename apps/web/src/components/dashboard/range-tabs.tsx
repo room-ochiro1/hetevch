@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 import { RANGES, RANGE_LABELS, type RangeDays } from '@/lib/range';
 
-/** The dashboard's one filter row: the period every section below uses. */
-export function RangeTabs({ active }: { active: RangeDays }) {
+/** A page's one filter row: the period every section below uses (`basePath` = that page). */
+export function RangeTabs({ active, basePath = '/' }: { active: RangeDays; basePath?: string }) {
   return (
     <nav aria-label="Хугацаа" className="flex gap-1 rounded-xl bg-surface-2 p-1">
       {RANGES.map((days) => {
@@ -11,7 +11,7 @@ export function RangeTabs({ active }: { active: RangeDays }) {
         return (
           <Link
             key={days}
-            href={`/?range=${days}`}
+            href={`${basePath}?range=${days}`}
             scroll={false}
             aria-current={selected ? 'page' : undefined}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap ${

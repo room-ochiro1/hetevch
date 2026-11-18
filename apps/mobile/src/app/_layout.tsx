@@ -3,9 +3,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { StartupError } from '@/components/onboarding/startup-error';
 import { Colors } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
+import { CurrencyProvider } from '@/providers/currency';
 import { FinanceDataProvider } from '@/providers/finance-data';
 import { ThemePreferenceProvider } from '@/providers/theme-preference';
 
@@ -29,7 +31,7 @@ function navigationTheme(scheme: 'light' | 'dark'): typeof DefaultTheme {
 }
 
 function RootNavigator() {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, needsOnboarding, error, retry } = useAuth();
   const theme = useTheme();
 
   /** Screens pushed over the tabs: a flat native header on the page color, back arrow only. */
@@ -53,22 +55,28 @@ function RootNavigator() {
   if (isLoading) {
     return null;
   }
+  // No sign-in screen: the phone gets its own account on launch (see AuthProvider).
+  if (!session) {
+    return <StartupError message={error ?? ''} onRetry={retry} />;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={Boolean(session)}>
+      {/* redirectTo is explicit: without it a blocked route falls back to the first open
+          screen (help), not to the welcome form. */}
+      <Stack.Protected guard={!needsOnboarding} redirectTo="/welcome">
         <Stack.Screen name="(app)" />
         <Stack.Screen name="transaction" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/account" options={pushed('Хувийн мэдээлэл')} />
-        <Stack.Screen name="settings/password" options={pushed('Нууц үг солих')} />
-        <Stack.Screen name="savings/accounts" options={pushed('Хадгаламж')} />
         <Stack.Screen name="savings/calculator" options={pushed('Хүүгийн тооцоолуур')} />
+        <Stack.Screen name="savings/[id]" options={pushed('Хадгаламж')} />
         <Stack.Screen name="savings/edit" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="savings/entry" options={{ presentation: 'modal' }} />
       </Stack.Protected>
-      <Stack.Protected guard={!session}>
-        <Stack.Screen name="sign-in" />
+      <Stack.Protected guard={needsOnboarding} redirectTo="/">
+        <Stack.Screen name="welcome" />
       </Stack.Protected>
-      {/* Open to everyone: the sign-in screen links to the terms and the privacy policy. */}
+      {/* Open to everyone: the welcome screen links to the terms and the privacy policy. */}
       <Stack.Screen name="help" options={pushed('Түгээмэл асуулт')} />
       <Stack.Screen name="legal/terms" options={pushed('Үйлчилгээний нөхцөл')} />
       <Stack.Screen name="legal/privacy" options={pushed('Нууцлалын бодлого')} />
@@ -82,9 +90,11 @@ function ThemedRoot() {
   return (
     <ThemeProvider value={navigationTheme(scheme)}>
       <AuthProvider>
-        <FinanceDataProvider>
-          <RootNavigator />
-        </FinanceDataProvider>
+        <CurrencyProvider>
+          <FinanceDataProvider>
+            <RootNavigator />
+          </FinanceDataProvider>
+        </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
   );

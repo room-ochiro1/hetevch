@@ -89,6 +89,17 @@ export const LogOutIcon = createIcon(
   </>,
 );
 export const ActivityIcon = createIcon('Activity', <path d="M22 12h-4l-3 9L9 3l-3 9H2" />);
+/** Bar chart with a magnifier: the Судалгаа (research) page. */
+export const ResearchIcon = createIcon(
+  'Research',
+  <>
+    <path d="M3 3v18h18" />
+    <path d="M7 16v-4" />
+    <path d="M11 16V9" />
+    <circle cx="16.5" cy="9.5" r="3" />
+    <path d="m21 14-2.4-2.4" />
+  </>,
+);
 export const ReceiptIcon = createIcon(
   'Receipt',
   <>

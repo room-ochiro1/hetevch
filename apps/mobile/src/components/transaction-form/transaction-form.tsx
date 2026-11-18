@@ -44,7 +44,9 @@ export function TransactionForm({ initial, preset, categories }: TransactionForm
           value={form.amountText}
           onChangeText={form.setAmountText}
           kind={form.kind}
-          autoFocus={!form.isEditing}
+          currency={form.currency}
+          hint={form.amountHint}
+          autoFocus={!form.isEditing && !form.hasPresetAmount}
         />
 
         <View style={styles.field}>

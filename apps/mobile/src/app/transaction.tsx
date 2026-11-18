@@ -17,12 +17,15 @@ import { useTheme } from '@/hooks/use-theme';
  */
 export default function TransactionScreen() {
   const theme = useTheme();
-  const { id, kind, categoryId } = useLocalSearchParams<{
+  const { id, kind, categoryId, amount } = useLocalSearchParams<{
     id?: string;
     kind?: string;
     categoryId?: string;
+    amount?: string;
   }>();
   const presetKind = kind === 'income' || kind === 'expense' ? kind : undefined;
+  // Only a plain number is accepted from the URL.
+  const presetAmount = amount && /^\d+(\.\d{1,2})?$/.test(amount) ? amount : undefined;
   const existing = useTransaction(id);
   const categories = useCategories();
   const error = categories.error ?? existing.error;
@@ -53,7 +56,7 @@ export default function TransactionScreen() {
               <TransactionForm
                 key={id ?? 'new'}
                 initial={existing.data ?? undefined}
-                preset={{ kind: presetKind, categoryId }}
+                preset={{ kind: presetKind, categoryId, amount: presetAmount }}
                 categories={categories.data ?? []}
               />
             ) : (

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { UserListItem } from '@/lib/dal/users';
 import { formatCount, formatDateTime } from '@/lib/format';
+import { userName, userSubtitle } from '@/lib/user-label';
 
 export function UsersTable({ users }: { users: UserListItem[] }) {
   if (users.length === 0) {
@@ -27,9 +28,9 @@ export function UsersTable({ users }: { users: UserListItem[] }) {
               <td className="px-5 py-3">
                 <Link href={`/users/${user.id}`} className="group block">
                   <span className="block font-medium group-hover:text-accent-text">
-                    {user.fullName ?? 'Нэргүй'}
+                    {userName(user)}
                   </span>
-                  <span className="block text-xs text-muted">{user.email ?? '—'}</span>
+                  <span className="block text-xs text-muted">{userSubtitle(user)}</span>
                 </Link>
               </td>
               <td className="px-5 py-3">

@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Panel } from '@/components/ui/panel';
 import { listRecentSignups } from '@/lib/dal/users';
 import { formatDateTime } from '@/lib/format';
+import { userName, userSubtitle } from '@/lib/user-label';
 
 export async function RecentSignups() {
   const users = await listRecentSignups(6);
@@ -22,7 +23,7 @@ export async function RecentSignups() {
       ) : (
         <ul className="-mx-2 flex flex-col">
           {users.map((user) => {
-            const name = user.full_name ?? user.email ?? 'Нэргүй';
+            const name = userName(user);
             return (
               <li key={user.id}>
                 <Link
@@ -34,10 +35,10 @@ export async function RecentSignups() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{name}</span>
-                    <span className="block truncate text-xs text-muted">{user.email}</span>
+                    <span className="block truncate text-xs text-muted">{userSubtitle(user)}</span>
                   </span>
                   <span className="shrink-0 text-xs text-muted">
-                    {formatDateTime(user.created_at)}
+                    {formatDateTime(user.createdAt)}
                   </span>
                 </Link>
               </li>

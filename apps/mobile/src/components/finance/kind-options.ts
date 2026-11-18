@@ -8,10 +8,18 @@ export const KIND_OPTIONS: readonly SegmentOption<TransactionKind>[] = TRANSACTI
   (kind) => ({ value: kind, label: KIND_LABELS[kind], tone: kind === 'income' ? 'income' : 'expense' }),
 );
 
-/** Opens the add-transaction sheet, optionally with the kind and category already chosen. */
-export function openNewTransaction(preset?: { kind?: TransactionKind; categoryId?: string }) {
+type NewTransactionPreset = {
+  kind?: TransactionKind;
+  categoryId?: string;
+  /** Typed on the home keypad, in the display currency ("12500" or "3.5"). */
+  amount?: string;
+};
+
+/** Opens the add-transaction sheet, optionally with the kind, category or amount filled in. */
+export function openNewTransaction(preset?: NewTransactionPreset) {
   const params: Record<string, string> = {};
   if (preset?.kind) params.kind = preset.kind;
   if (preset?.categoryId) params.categoryId = preset.categoryId;
+  if (preset?.amount) params.amount = preset.amount;
   router.push({ pathname: '/transaction', params });
 }

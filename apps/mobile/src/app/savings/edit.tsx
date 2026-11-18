@@ -10,7 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { IconButton } from '@/components/ui/icon-button';
 import { StateMessage } from '@/components/ui/state-message';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useSavingsAccount } from '@/hooks/use-savings';
+import { useSavingsCard } from '@/hooks/use-savings';
 import { useTheme } from '@/hooks/use-theme';
 
 /** Positive whole number from a URL param, else undefined. */
@@ -20,8 +20,8 @@ function wholeParam(value: string | undefined): number | undefined {
 }
 
 /**
- * Add or edit a savings account as a modal sheet. `?id=<uuid>` edits; the calculator opens it
- * with `?principal=&rate=&compounding=&term=` to save what was just calculated.
+ * Add or edit a savings card as a modal sheet. `?id=<uuid>` edits; the calculator opens it
+ * with `?principal=&rate=&compounding=&term=&currency=` to save what was just calculated.
  */
 export default function SavingsAccountScreen() {
   const theme = useTheme();
@@ -31,14 +31,16 @@ export default function SavingsAccountScreen() {
     rate?: string;
     compounding?: string;
     term?: string;
+    currency?: string;
   }>();
-  const existing = useSavingsAccount(params.id);
-  const { compounding } = params;
+  const existing = useSavingsCard(params.id);
+  const { compounding, currency } = params;
   const preset: SavingsPreset = {
     principal: wholeParam(params.principal),
     annualRate: params.rate ? (parseRate(params.rate) ?? undefined) : undefined,
     compounding: compounding === 'simple' || compounding === 'monthly' ? compounding : undefined,
     termMonths: wholeParam(params.term),
+    currency: currency === 'MNT' || currency === 'USD' ? currency : undefined,
   };
 
   return (
@@ -51,7 +53,7 @@ export default function SavingsAccountScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[styles.header, { borderColor: theme.border }]}>
             <ThemedText type="heading" accessibilityRole="header">
-              {params.id ? 'Хадгаламж засах' : 'Шинэ хадгаламж'}
+              {params.id ? 'Карт засах' : 'Шинэ хадгаламжийн карт'}
             </ThemedText>
             <IconButton icon="close" label="Хаах" onPress={() => router.back()} />
           </View>

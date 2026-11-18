@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { DashboardIcon, TagIcon, TransferIcon, UsersIcon } from '@/components/ui/icons';
+import { DashboardIcon, ResearchIcon, TagIcon, TransferIcon, UsersIcon } from '@/components/ui/icons';
 
 const LINKS = [
   { href: '/', label: 'Хянах самбар', icon: DashboardIcon },
+  { href: '/research', label: 'Судалгаа', icon: ResearchIcon },
   { href: '/users', label: 'Хэрэглэгчид', icon: UsersIcon },
   { href: '/transactions', label: 'Гүйлгээ', icon: TransferIcon },
   { href: '/categories', label: 'Ангилал', icon: TagIcon },

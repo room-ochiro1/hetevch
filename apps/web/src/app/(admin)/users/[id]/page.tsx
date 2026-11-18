@@ -16,6 +16,7 @@ import { getUserDetail } from '@/lib/dal/user-detail';
 import { formatDateTime } from '@/lib/format';
 import { isUuid } from '@/lib/parse';
 import { getPage } from '@/lib/search-params';
+import { userName, userSubtitle } from '@/lib/user-label';
 
 export default async function UserDetailPage({ params, searchParams }: PageProps<'/users/[id]'>) {
   const { id } = await params;
@@ -37,8 +38,8 @@ export default async function UserDetailPage({ params, searchParams }: PageProps
       </Link>
 
       <PageHeader
-        title={user.fullName ?? user.email ?? 'Нэргүй хэрэглэгч'}
-        description={`${user.email ?? '—'} · Бүртгүүлсэн: ${formatDateTime(user.createdAt)}`}
+        title={userName(user)}
+        description={`${userSubtitle(user)} · Бүртгүүлсэн: ${formatDateTime(user.createdAt)}`}
         actions={
           user.role === 'admin' ? <Badge tone="accent">Админ</Badge> : <Badge>Хэрэглэгч</Badge>
         }

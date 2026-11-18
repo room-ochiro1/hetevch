@@ -1,4 +1,12 @@
-import { formatLongDate, toISODate, type Profile } from '@hetevch/shared';
+import {
+  MAX_AGE,
+  MIN_AGE,
+  ageFromBirthYear,
+  formatLongDate,
+  parseBirthYear,
+  toISODate,
+  type Profile,
+} from '@hetevch/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -9,22 +17,29 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
-import { deleteAccount, updateFullName } from '@/lib/account';
+import { deleteAccount, updateProfile } from '@/lib/account';
 import { useFinanceData } from '@/providers/finance-data';
 
-/** Edit the display name, see the account facts, and delete the account. */
+/** Edit the name and birth year, see when the account began, and delete the account. */
 export function AccountForm({ profile }: { profile: Profile }) {
   const { invalidate } = useFinanceData();
-  const saved = profile.full_name?.trim() ?? '';
-  const [name, setName] = useState(saved);
+  const savedName = profile.full_name?.trim() ?? '';
+  const savedYear = profile.birth_year ? String(profile.birth_year) : '';
+  const [name, setName] = useState(savedName);
+  const [yearText, setYearText] = useState(savedYear);
   const [busy, setBusy] = useState<'saving' | 'deleting' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const changed = name.trim() !== saved;
+  const changed = name.trim() !== savedName || yearText.trim() !== savedYear;
+  const birthYear = parseBirthYear(yearText);
 
   async function save() {
+    if (yearText.trim() && birthYear === null) {
+      setError(`Төрсөн оноо 4 оронтойгоор бичнэ үү (${MIN_AGE}–${MAX_AGE} нас). Жишээ нь: 1998`);
+      return;
+    }
     setBusy('saving');
     setError(null);
-    const saveError = await updateFullName(profile.id, name);
+    const saveError = await updateProfile(profile.id, { fullName: name, birthYear });
     setBusy(null);
     if (saveError) {
       setError(saveError);
@@ -37,7 +52,7 @@ export function AccountForm({ profile }: { profile: Profile }) {
   function confirmDelete() {
     Alert.alert(
       'Бүртгэлээ устгах уу?',
-      'Таны бүх гүйлгээ, мэдээлэл бүрмөсөн устах бөгөөд сэргээх боломжгүй.',
+      'Таны бүх гүйлгээ, хадгаламж бүрмөсөн устах бөгөөд сэргээх боломжгүй. Апп шинээр эхэлнэ.',
       [
         { text: 'Болих', style: 'cancel' },
         {
@@ -46,7 +61,7 @@ export function AccountForm({ profile }: { profile: Profile }) {
           onPress: async () => {
             setBusy('deleting');
             setError(null);
-            // On success the session ends and the router switches to the sign-in screen.
+            // On success the session ends and the app shows the welcome form again.
             const deleteError = await deleteAccount();
             setBusy(null);
             if (deleteError) setError(deleteError);
@@ -67,9 +82,20 @@ export function AccountForm({ profile }: { profile: Profile }) {
           autoComplete="name"
           textContentType="name"
           maxLength={80}
-          returnKeyType="done"
-          onSubmitEditing={changed ? save : undefined}
         />
+        <TextField
+          label="Төрсөн он"
+          value={yearText}
+          onChangeText={(text) => setYearText(text.replace(/\D/g, '').slice(0, 4))}
+          placeholder="Жишээ нь: 1998"
+          keyboardType="number-pad"
+          maxLength={4}
+        />
+        {birthYear !== null ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            Энэ жил {ageFromBirthYear(birthYear)} нас хүрнэ.
+          </ThemedText>
+        ) : null}
         <Button
           title="Хадгалах"
           onPress={save}
@@ -79,11 +105,10 @@ export function AccountForm({ profile }: { profile: Profile }) {
       </View>
 
       <SettingsGroup title="Бүртгэлийн мэдээлэл">
-        <SettingsRow icon="✉️" tone="mint" label="Имэйл" value={profile.email ?? '—'} />
         <SettingsRow
           icon="📅"
           tone="peach"
-          label="Бүртгүүлсэн"
+          label="Эхэлсэн"
           value={formatLongDate(toISODate(new Date(profile.created_at)))}
         />
       </SettingsGroup>
@@ -97,8 +122,8 @@ export function AccountForm({ profile }: { profile: Profile }) {
       <View style={styles.block}>
         <ThemedText type="smallBold">Бүртгэл устгах</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          Бүртгэлээ устгавал таны бүх гүйлгээ, тохиргоо бүрмөсөн устна. Энэ үйлдлийг буцаах
-          боломжгүй.
+          Бүртгэлээ устгавал энэ утсан дээрх таны бүх гүйлгээ, хадгаламж бүрмөсөн устна. Утсаа
+          бусдад өгөх, зарахаасаа өмнө заавал устгаарай.
         </ThemedText>
         <Button
           variant="danger"

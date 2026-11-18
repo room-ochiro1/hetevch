@@ -1,4 +1,4 @@
-import type { Profile } from '@hetevch/shared';
+import { ageFromBirthYear, type Profile } from '@hetevch/shared';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -10,17 +10,20 @@ type IdentityCardProps = {
   onPress: () => void;
 };
 
-/** Who is signed in: avatar initial, name and email. Opens the account details. */
+/** Whose phone this is: avatar initial, name and age. Opens the account details. */
 export function IdentityCard({ profile, onPress }: IdentityCardProps) {
   const theme = useTheme();
   const fullName = profile?.full_name?.trim();
   const name = fullName || 'Нэрээ оруулаагүй';
-  const initial = (fullName || profile?.email || '?').charAt(0).toUpperCase();
+  const initial = (fullName || '?').charAt(0).toUpperCase();
+  const detail = profile?.birth_year
+    ? `${ageFromBirthYear(profile.birth_year)} настай`
+    : 'Төрсөн оноо оруулаагүй';
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${profile?.email ?? ''}. Хувийн мэдээлэл нээх`}
+      accessibilityLabel={`${name}, ${detail}. Хувийн мэдээлэл нээх`}
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -37,7 +40,7 @@ export function IdentityCard({ profile, onPress }: IdentityCardProps) {
           {profile ? name : ' '}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-          {profile?.email ?? ' '}
+          {profile ? detail : ' '}
         </ThemedText>
       </View>
       <ThemedText themeColor="textSecondary" style={styles.chevron}>

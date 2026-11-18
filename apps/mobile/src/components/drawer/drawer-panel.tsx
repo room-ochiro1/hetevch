@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { DrawerProfile } from '@/components/drawer/drawer-profile';
 import { SavingsPromo } from '@/components/drawer/savings-promo';
 import { openNewTransaction } from '@/components/finance/kind-options';
 import { ThemedText } from '@/components/themed-text';
@@ -13,8 +14,8 @@ type Go = (after?: () => void) => void;
 type Item = { icon: IconName; label: string; open?: () => void };
 
 const SECTIONS: readonly Item[] = [
-  { icon: 'overview', label: 'Тойм' },
-  { icon: 'savings', label: 'Хадгаламж', open: () => router.push('/savings/accounts') },
+  { icon: 'overview', label: 'Тойм', open: () => router.navigate('/overview') },
+  { icon: 'savings', label: 'Хадгаламж', open: () => router.navigate('/savings') },
   { icon: 'calculator', label: 'Хүүгийн тооцоолуур', open: () => router.push('/savings/calculator') },
 ];
 
@@ -23,7 +24,7 @@ const QUICK_ACTIONS: readonly Item[] = [
   { icon: 'income', label: 'Орлого нэмэх', open: () => openNewTransaction({ kind: 'income' }) },
 ];
 
-/** The wide column: app name, sections, quick actions and the savings card. */
+/** The wide column: who is signed in, sections, quick actions and the savings card. */
 export function DrawerPanel({ go }: { go: Go }) {
   const theme = useTheme();
 
@@ -52,25 +53,14 @@ export function DrawerPanel({ go }: { go: Go }) {
 
   return (
     <View style={styles.panel}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Шинэ гүйлгээ нэмэх"
-        onPress={() => go(() => openNewTransaction())}
-        style={[styles.brand, { borderColor: theme.border }]}>
-        <ThemedText type="smallBold" themeColor="accentText" style={styles.brandName}>
-          Хэтэвч
-        </ThemedText>
-        <View style={[styles.brandAdd, { backgroundColor: theme.accent }]}>
-          <Icon name="add" size={16} color={theme.onAccent} />
-        </View>
-      </Pressable>
+      <DrawerProfile onOpen={() => go(() => router.navigate('/profile'))} />
 
-      <View style={styles.list}>{SECTIONS.map((item, index) => row(item, index === 0))}</View>
+      <View style={styles.list}>{SECTIONS.map((item) => row(item))}</View>
       <View style={[styles.divider, { backgroundColor: theme.border }]} />
       <View style={styles.list}>{QUICK_ACTIONS.map((item) => row(item))}</View>
 
       <View style={styles.bottom}>
-        <SavingsPromo onOpen={() => go(() => router.push('/savings/accounts'))} />
+        <SavingsPromo onOpen={() => go(() => router.navigate('/savings'))} />
       </View>
     </View>
   );
@@ -81,26 +71,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Spacing.three,
     gap: Spacing.four,
-  },
-  brand: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: Radius.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: Spacing.three,
-    paddingRight: Spacing.two,
-  },
-  brandName: {
-    flex: 1,
-    fontSize: 16,
-  },
-  brandAdd: {
-    width: 28,
-    height: 28,
-    borderRadius: Radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   list: {
     gap: Spacing.one,
