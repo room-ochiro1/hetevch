@@ -1,4 +1,4 @@
-import { ageFromBirthYear } from '@hetevch/shared';
+import { GENDER_LABELS, ageFromBirthYear, parseGender, type Gender } from '@hetevch/shared';
 
 export type DevicePlatform = 'android' | 'ios' | 'web';
 
@@ -12,6 +12,7 @@ export type UserIdentity = {
   email: string | null;
   fullName: string | null;
   birthYear: number | null;
+  gender: Gender | null;
   platform: DevicePlatform | null;
 };
 
@@ -20,10 +21,11 @@ export function userName(user: UserIdentity): string {
   return user.fullName ?? user.email ?? 'Нэргүй хэрэглэгч';
 }
 
-/** Second line under the name: "27 настай · Android", or the email for email accounts. */
+/** Second line under the name: "27 настай · Эм · Android", or the email for email accounts. */
 export function userSubtitle(user: UserIdentity): string {
   const parts = [
     user.birthYear ? `${ageFromBirthYear(user.birthYear)} настай` : null,
+    user.gender ? GENDER_LABELS[user.gender] : null,
     user.platform ? PLATFORM_LABELS[user.platform] : null,
     user.email,
   ].filter((part): part is string => Boolean(part));
@@ -34,8 +36,14 @@ type ProfileRow = {
   email: string | null;
   full_name: string | null;
   birth_year: number | null;
-  device: { platform: DevicePlatform } | null;
+  gender: string | null;
+  /** The column is text in the database; only known platforms are shown. */
+  device: { platform: string } | null;
 };
+
+function toPlatform(value: string | undefined): DevicePlatform | null {
+  return value === 'android' || value === 'ios' || value === 'web' ? value : null;
+}
 
 /** Maps a profiles row with `device:device_links(platform)` embedded. */
 export function toIdentity(row: ProfileRow): UserIdentity {
@@ -43,9 +51,10 @@ export function toIdentity(row: ProfileRow): UserIdentity {
     email: row.email,
     fullName: row.full_name,
     birthYear: row.birth_year,
-    platform: row.device?.platform ?? null,
+    gender: parseGender(row.gender),
+    platform: toPlatform(row.device?.platform),
   };
 }
 
 /** PostgREST select fragment that yields a ProfileRow. */
-export const IDENTITY_SELECT = 'email, full_name, birth_year, device:device_links(platform)';
+export const IDENTITY_SELECT = 'email, full_name, birth_year, gender, device:device_links(platform)';

@@ -4,11 +4,14 @@ import { KpiTile, KpiTileSkeleton } from '@/components/dashboard/kpi-tile';
 import { ActivityIcon, ReceiptIcon, TrendDownIcon, UserPlusIcon } from '@/components/ui/icons';
 import { getDashboard } from '@/lib/dal/analytics';
 import { formatCount } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import { filterHref, type Filters } from '@/lib/filters';
 
-export async function KpiRow({ days }: { days: RangeDays }) {
-  const { totalUsers, daily, current, previous } = await getDashboard(days);
+export async function KpiRow({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const { totalUsers, daily, current, previous } = await getDashboard(days, band, sex);
   const versus = `өмнөх ${days} хоногоос`;
+  const bands = filterHref('/', filters, { type: 'bands' });
+  const expense = filterHref('/', filters, { type: 'kind', kind: 'expense' });
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -20,6 +23,7 @@ export async function KpiRow({ days }: { days: RangeDays }) {
         previous={previous.newUsers}
         versus={`${versus} · нийт ${formatCount(totalUsers)}`}
         trend={daily.map((d) => d.newUsers)}
+        href={bands}
       />
       <KpiTile
         icon={ActivityIcon}
@@ -29,6 +33,7 @@ export async function KpiRow({ days }: { days: RangeDays }) {
         previous={previous.activeUsers}
         versus={versus}
         trend={daily.map((d) => d.activeUsers)}
+        href={bands}
       />
       <KpiTile
         icon={ReceiptIcon}
@@ -38,6 +43,7 @@ export async function KpiRow({ days }: { days: RangeDays }) {
         previous={previous.txCount}
         versus={versus}
         trend={daily.map((d) => d.txCount)}
+        href={expense}
       />
       <KpiTile
         icon={TrendDownIcon}
@@ -48,6 +54,7 @@ export async function KpiRow({ days }: { days: RangeDays }) {
         versus={versus}
         polarity="neutral"
         trend={daily.map((d) => d.expense)}
+        href={expense}
       />
     </div>
   );

@@ -1,8 +1,11 @@
 import {
+  BASE_CURRENCY,
   CURRENCY_INFO,
+  convertAmount,
   formatAmount,
   formatAmountInput,
   parseAmount,
+  roundAmount,
   savingsStatus,
   toISODate,
   type Currency,
@@ -20,6 +23,7 @@ import { Segmented, type SegmentOption } from '@/components/ui/segmented';
 import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
 import { addSavingsEntry } from '@/lib/savings';
+import { useCurrency } from '@/providers/currency';
 import { useFinanceData } from '@/providers/finance-data';
 
 export type Direction = 'in' | 'out';
@@ -34,11 +38,15 @@ const QUICK: Record<Currency, readonly number[]> = {
   USD: [10, 50, 100, 500],
 };
 
-/** Put money into a card or take it out. Neither is income or expense. */
+/**
+ * Put money into a card or take it out. Neither is income or expense, but money put in leaves
+ * the user's balance and money taken out comes back to it.
+ */
 type EntryFormProps = { card: SavingsCard; initialDirection: Direction };
 
 export function EntryForm({ card, initialDirection }: EntryFormProps) {
   const { invalidate } = useFinanceData();
+  const { rates } = useCurrency();
   const [direction, setDirection] = useState<Direction>(initialDirection);
   const [amountText, setAmountText] = useState('');
   const [occurredOn, setOccurredOn] = useState(toISODate(new Date()));
@@ -62,11 +70,22 @@ export function EntryForm({ card, initialDirection }: EntryFormProps) {
       setError(`Картанд ${formatAmount(balance, card.currency)} байна. Үүнээс их авах боломжгүй.`);
       return;
     }
+    // A dollar card's movement also needs its tögrög value, since it moves the user's balance.
+    if (card.currency !== BASE_CURRENCY && !rates) {
+      setError('Долларын ханш ачаалагдаагүй байна. Интернэтээ шалгаад дахин оролдоно уу.');
+      return;
+    }
+    const signed = direction === 'in' ? amount : -amount;
+    const baseAmount =
+      card.currency === BASE_CURRENCY || !rates
+        ? null
+        : roundAmount(convertAmount(signed, card.currency, BASE_CURRENCY, rates.perUsd));
     setError(null);
     setSaving(true);
     const saveError = await addSavingsEntry({
       accountId: card.id,
-      amount: direction === 'in' ? amount : -amount,
+      amount: signed,
+      baseAmount,
       occurredOn,
       note,
     });
@@ -104,7 +123,9 @@ export function EntryForm({ card, initialDirection }: EntryFormProps) {
           maxLength={200}
         />
         <ThemedText type="caption" themeColor="textSecondary">
-          Хадгаламжийн хөдөлгөөн орлого, зарлагад тооцогдохгүй.
+          {direction === 'in'
+            ? 'Хийсэн мөнгө таны үлдэгдлээс хасагдана, зарлагад тооцогдохгүй.'
+            : 'Авсан мөнгө таны үлдэгдэлд буцаж нэмэгдэнэ, орлогод тооцогдохгүй.'}
         </ThemedText>
       </ScrollView>
       <View style={styles.footer}>

@@ -1,4 +1,11 @@
-import { COMPOUNDING_LABELS, formatAmountInput, type Compounding, type Currency } from '@hetevch/shared';
+import {
+  COMPOUNDING_LABELS,
+  CURRENCY_INFO,
+  formatAmountInput,
+  toCardCurrency,
+  type Compounding,
+  type Currency,
+} from '@hetevch/shared';
 import { StyleSheet, View } from 'react-native';
 
 import { CalculatorResults } from '@/components/savings/calculator-results';
@@ -42,7 +49,9 @@ const UNIT_WORD: Record<DurationUnit, string> = { day: 'хоног', month: 'с�
 /** "How much will my savings earn?" — amount, rate and time in; the answer updates as you type. */
 export default function CalculatorScreen() {
   const calc = useCalculator();
-  const { currency, symbol } = useMoney();
+  // Cards are held in tögrög or dollars, so the calculator uses the display currency only then.
+  const currency = toCardCurrency(useMoney().currency);
+  const symbol = CURRENCY_INFO[currency].symbol;
 
   return (
     <Page>

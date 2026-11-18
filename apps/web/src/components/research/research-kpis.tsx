@@ -1,9 +1,10 @@
 import { formatAmount, formatMoney } from '@hetevch/shared';
+import Link from 'next/link';
 
 import { WEEKDAY_LABELS } from '@/lib/age-bands';
 import { getResearch, type Research } from '@/lib/dal/research';
 import { formatCount } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import { filterHref, type Filters } from '@/lib/filters';
 
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 const share = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : '—');
@@ -18,8 +19,9 @@ export function weekdayAverages(research: Research): { total: number; average: n
 }
 
 /** The headline numbers of the research page, each with the context that makes it readable. */
-export async function ResearchKpis({ days }: { days: RangeDays }) {
-  const research = await getResearch(days);
+export async function ResearchKpis({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const research = await getResearch(days, band, sex);
   const { bands, cards, flow } = research;
   const users = sum(bands.map((b) => b.users));
   const withAge = users - sum(bands.filter((b) => b.band === 'unknown').map((b) => b.users));
@@ -31,17 +33,20 @@ export async function ResearchKpis({ days }: { days: RangeDays }) {
   const averages = weekdayAverages(research);
   const peak = averages.reduce((best, day, i) => (day.average > (averages[best]?.average ?? 0) ? i : best), 0);
   const hasSpending = (averages[peak]?.average ?? 0) > 0;
+  const link = (detail: Parameters<typeof filterHref>[2]) => filterHref('/research', filters, detail);
 
   const tiles = [
     {
       label: 'Хэрэглэгч',
       value: formatCount(users),
       note: `Насаа бүртгүүлсэн ${formatCount(withAge)} (${share(withAge, users)})`,
+      href: link({ type: 'bands' }),
     },
     {
       label: 'Хадгаламжтай хэрэглэгч',
       value: share(savers, users),
       note: `${formatCount(savers)} хүн · ${formatCount(cards.length)} карт`,
+      href: link({ type: 'bands' }),
     },
     {
       label: 'Нийт хадгаламж',
@@ -52,6 +57,7 @@ export async function ResearchKpis({ days }: { days: RangeDays }) {
       label: 'Орлогоосоо хадгалсан',
       value: share(deposits, income),
       note: `${formatMoney(Math.round(deposits))} хийсэн / ${formatMoney(Math.round(income))} орлого`,
+      href: link({ type: 'kind', kind: 'income' }),
     },
     {
       label: 'Хамгийн их зарцуулдаг гараг',
@@ -59,18 +65,29 @@ export async function ResearchKpis({ days }: { days: RangeDays }) {
       note: hasSpending
         ? `Тэр өдөр дунджаар ${formatMoney(Math.round(averages[peak]?.average ?? 0))}`
         : 'Зарлага бүртгэгдээгүй',
+      href: link({ type: 'kind', kind: 'expense' }),
     },
   ];
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      {tiles.map((tile) => (
-        <div key={tile.label} className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-5">
-          <p className="text-xs font-medium text-muted">{tile.label}</p>
-          <p className="truncate text-2xl font-semibold tabular-nums">{tile.value}</p>
-          <p className="text-xs text-muted">{tile.note}</p>
-        </div>
-      ))}
+      {tiles.map((tile) => {
+        const body = (
+          <>
+            <p className="text-xs font-medium text-muted">{tile.label}</p>
+            <p className="truncate text-2xl font-semibold tabular-nums">{tile.value}</p>
+            <p className="text-xs text-muted">{tile.note}</p>
+          </>
+        );
+        const box = 'flex flex-col gap-1 rounded-2xl border border-border bg-surface p-5';
+        return 'href' in tile && tile.href ? (
+          <Link key={tile.label} href={tile.href} scroll={false} className={`${box} hover:border-foreground/30`}>
+            {body}
+          </Link>
+        ) : (
+          <div key={tile.label} className={box}>{body}</div>
+        );
+      })}
     </div>
   );
 }

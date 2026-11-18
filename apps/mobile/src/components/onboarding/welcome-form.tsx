@@ -1,8 +1,9 @@
-import { MAX_AGE, MIN_AGE, ageFromBirthYear, parseBirthYear } from '@hetevch/shared';
+import { MAX_AGE, MIN_AGE, ageFromBirthYear, parseBirthYear, type Gender } from '@hetevch/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Keyboard, StyleSheet, Text, View } from 'react-native';
 
+import { GenderField } from '@/components/settings/gender-field';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,15 +19,16 @@ import { useFinanceData } from '@/providers/finance-data';
 const MAX_NAME_LENGTH = 40;
 
 /**
- * Name + birth year, the only things the app asks for, and an explicit tick for the terms and
+ * Name, birth year and gender, the only things the app asks for, and an explicit tick for the terms and
  * privacy policy: «Эхлэх» stays off until it is ticked, and the acceptance is recorded.
  */
-export function WelcomeForm() {
+export function WelcomeForm({ preview = false }: { preview?: boolean }) {
   const theme = useTheme();
   const { session, finishOnboarding } = useAuth();
   const { invalidate } = useFinanceData();
   const [name, setName] = useState('');
   const [birthYearText, setBirthYearText] = useState('');
+  const [gender, setGender] = useState<Gender | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,7 +46,15 @@ export function WelcomeForm() {
       setError(`Төрсөн оноо 4 оронтойгоор оруулна уу (${MIN_AGE}–${MAX_AGE} настай).`);
       return;
     }
+    if (gender === null) {
+      setError('Хүйсээ сонгоно уу.');
+      return;
+    }
     if (!agreed || !session) {
+      return;
+    }
+    if (preview) {
+      setError('Урьдчилан харах горим: бүх талбар зөв байна, юу ч хадгалсангүй.');
       return;
     }
     Keyboard.dismiss();
@@ -52,7 +62,7 @@ export function WelcomeForm() {
     setError(null);
     const { error: saveError } = await supabase
       .from('profiles')
-      .update({ full_name: fullName, birth_year: birthYear })
+      .update({ full_name: fullName, birth_year: birthYear, gender })
       .eq('id', session.user.id);
     // Which versions were accepted, so a later change to either document can ask again.
     const { error: consentError } = saveError
@@ -97,6 +107,7 @@ export function WelcomeForm() {
           </ThemedText>
         ) : null}
       </View>
+      <GenderField value={gender} onChange={setGender} />
       {error ? (
         <ThemedText type="small" themeColor="danger" accessibilityRole="alert">
           {error}

@@ -1,15 +1,16 @@
-import { formatMoney } from '@hetevch/shared';
+import { ageFromBirthYear, formatMoney } from '@hetevch/shared';
 import Link from 'next/link';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { Panel } from '@/components/ui/panel';
 import { getTopUsers } from '@/lib/dal/analytics';
 import { formatCount, formatDateTime } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import type { Filters } from '@/lib/filters';
 
 /** Who uses the app most in the period: count with an inline bar, spend, last activity. */
-export async function TopUsersPanel({ days }: { days: RangeDays }) {
-  const users = await getTopUsers(days);
+export async function TopUsersPanel({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const users = await getTopUsers(days, band, sex);
   const max = Math.max(1, ...users.map((u) => u.txCount));
 
   return (
@@ -37,7 +38,10 @@ export async function TopUsersPanel({ days }: { days: RangeDays }) {
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate font-medium hover:underline">{user.name}</span>
-                        <span className="block truncate text-xs text-muted">{user.email}</span>
+                        <span className="block truncate text-xs text-muted">
+                          {user.birthYear ? `${ageFromBirthYear(user.birthYear)} нас · ` : ''}
+                          {user.email}
+                        </span>
                       </span>
                     </Link>
                   </td>

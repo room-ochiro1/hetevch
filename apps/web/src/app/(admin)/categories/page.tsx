@@ -1,8 +1,12 @@
+import { Suspense } from 'react';
+
 import { CategoryForm } from '@/components/categories/category-form';
 import { CategoryList } from '@/components/categories/category-list';
+import { UserCategoryTable } from '@/components/categories/user-category-table';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
-import { listCategories } from '@/lib/dal/categories';
+import { listCategories, listUserCategories } from '@/lib/dal/categories';
+import { formatCount } from '@/lib/format';
 
 export default async function CategoriesPage() {
   const categories = await listCategories();
@@ -28,6 +32,25 @@ export default async function CategoriesPage() {
           <CategoryForm />
         </Panel>
       </div>
+      <Suspense fallback={<div aria-hidden className="h-64 animate-pulse rounded-2xl bg-surface-2" />}>
+        <UserCategories />
+      </Suspense>
     </>
+  );
+}
+
+/** Categories users made in the app; each is visible only to the user who made it. */
+async function UserCategories() {
+  const { rows, total } = await listUserCategories();
+  const shown = rows.length < total ? ` · сүүлийн ${formatCount(rows.length)}-г харуулж байна` : '';
+
+  return (
+    <Panel
+      title="Хэрэглэгчдийн нэмсэн ангиллууд"
+      description={`${formatCount(total)} ангилал · зөвхөн нэмсэн хэрэглэгч нь харж, засна${shown}`}
+      flush
+    >
+      <UserCategoryTable rows={rows} />
+    </Panel>
   );
 }

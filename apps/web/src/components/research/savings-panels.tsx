@@ -1,4 +1,5 @@
 import { formatAmount, formatMoney } from '@hetevch/shared';
+import Link from 'next/link';
 
 import { Legend } from '@/components/charts/chart-parts';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -6,13 +7,14 @@ import { Panel } from '@/components/ui/panel';
 import { SAVINGS_PURPOSES } from '@/lib/age-bands';
 import { getResearch } from '@/lib/dal/research';
 import { formatCount, formatShortDay } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import { filterHref, type Filters } from '@/lib/filters';
 
 const money = (value: number) => formatMoney(Math.round(value));
 
 /** Money moving in and out of savings each week, and what people are saving for. */
-export async function SavingsPanels({ days }: { days: RangeDays }) {
-  const { flow, cards } = await getResearch(days);
+export async function SavingsPanels({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const { flow, cards } = await getResearch(days, band, sex);
   const weeks = flow.filter((row) => row.currency === 'MNT').sort((a, b) => a.weekStart.localeCompare(b.weekStart));
   const usdIn = flow.filter((row) => row.currency === 'USD').reduce((sum, row) => sum + row.deposits, 0);
   const max = Math.max(1, ...weeks.flatMap((week) => [week.deposits, week.withdrawals]));
@@ -57,7 +59,7 @@ export async function SavingsPanels({ days }: { days: RangeDays }) {
         )}
       </Panel>
 
-      <Panel title="Юуны төлөө хуримтлуулж байна?" description="Картын зорилгоор (хэрэглэгчийн сонгосон дүрсээр)">
+      <Panel title="Юуны төлөө хуримтлуулж байна?" description="Картын зорилгоор (сонгосон дүрсээр) · дарж задална">
         {ranked.length === 0 ? (
           <EmptyState title="Хадгаламжийн карт алга" hint="Хэрэглэгчид карт үүсгэхэд зорилгоороо энд бүлэглэгдэнэ." />
         ) : (
@@ -67,7 +69,12 @@ export async function SavingsPanels({ days }: { days: RangeDays }) {
                 ? Math.round((purpose.goals.reduce((s, g) => s + g, 0) / purpose.goals.length) * 100)
                 : null;
               return (
-                <li key={icon} className="flex flex-col gap-1.5">
+                <li key={icon}>
+                  <Link
+                    href={filterHref('/research', filters, { type: 'purpose', icon, band: null })}
+                    scroll={false}
+                    className="-mx-2 flex flex-col gap-1.5 rounded-lg px-2 py-1 hover:bg-surface-2"
+                  >
                   <div className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="flex min-w-0 items-center gap-2">
                       <span aria-hidden>{icon}</span>
@@ -83,6 +90,7 @@ export async function SavingsPanels({ days }: { days: RangeDays }) {
                     {purpose.usd > 0 ? ` + ${formatAmount(purpose.usd, 'USD')}` : ''}
                     {progress !== null ? ` · зорилгынхоо дунджаар ${progress}%-д` : ' · зорилго тавиагүй'}
                   </p>
+                  </Link>
                 </li>
               );
             })}

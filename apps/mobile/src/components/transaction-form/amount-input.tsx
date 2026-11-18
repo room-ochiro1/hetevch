@@ -1,21 +1,15 @@
-import { CURRENCY_INFO, formatAmountInput, type Currency, type TransactionKind } from '@hetevch/shared';
+import { CURRENCY_INFO, formatAmountInput, type DisplayCurrency, type TransactionKind } from '@hetevch/shared';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-/** Common round amounts per currency: one tap instead of typing. */
-const QUICK_AMOUNTS: Record<Currency, readonly number[]> = {
-  MNT: [1000, 5000, 10000, 20000, 50000],
-  USD: [1, 5, 10, 20, 50],
-};
 
 type AmountInputProps = {
   value: string;
   onChangeText: (text: string) => void;
   kind: TransactionKind;
   /** The currency being typed in (the user's display currency). */
-  currency: Currency;
+  currency: DisplayCurrency;
   /** Small line under the amount, e.g. what it is in tögrög. */
   hint?: string;
   autoFocus?: boolean;
@@ -54,7 +48,7 @@ export function AmountInput({ value, onChangeText, kind, currency, hint, autoFoc
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.chips}>
-        {QUICK_AMOUNTS[currency].map((amount) => {
+        {CURRENCY_INFO[currency].quick.map((amount) => {
           const label = formatAmountInput(String(amount));
           const selected = value === label;
           return (

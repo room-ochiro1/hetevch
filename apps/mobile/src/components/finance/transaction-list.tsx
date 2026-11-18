@@ -1,26 +1,25 @@
-import {
-  formatDayLabel,
-  groupByDay,
-  type TransactionListItem,
-} from '@hetevch/shared';
+import { formatDayLabel, groupByDay } from '@hetevch/shared';
 import { StyleSheet, View } from 'react-native';
 
+import type { MoneyMove } from '@/components/finance/money-moves';
+import { SavingsMoveRow } from '@/components/finance/savings-move-row';
 import { TransactionRow } from '@/components/finance/transaction-row';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useMoney } from '@/hooks/use-money';
 
 type TransactionListProps = {
-  items: readonly TransactionListItem[];
+  items: readonly MoneyMove[];
   /** Group under day headers with each day's net; otherwise one flat list with dates. */
   grouped?: boolean;
 };
 
+/** Transactions and savings movements; a day's net counts both, as the balance does. */
 export function TransactionList({ items, grouped = false }: TransactionListProps) {
   const money = useMoney();
 
   if (!grouped) {
-    return <Rows items={items} showDate />;
+    return <Rows items={items} />;
   }
 
   return (
@@ -42,12 +41,16 @@ export function TransactionList({ items, grouped = false }: TransactionListProps
   );
 }
 
-function Rows({ items, showDate }: { items: readonly TransactionListItem[]; showDate?: boolean }) {
+function Rows({ items }: { items: readonly MoneyMove[] }) {
   return (
     <View style={styles.rows}>
-      {items.map((item) => (
-        <TransactionRow key={item.id} item={item} showDate={showDate} />
-      ))}
+      {items.map((item) =>
+        item.source === 'transaction' ? (
+          <TransactionRow key={item.key} item={item.transaction} />
+        ) : (
+          <SavingsMoveRow key={item.key} move={item.move} />
+        ),
+      )}
     </View>
   );
 }

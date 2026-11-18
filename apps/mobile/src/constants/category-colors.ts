@@ -1,25 +1,22 @@
 /**
  * Chart colors for categories. The colors stored on categories (picked for looks) fail the
- * dataviz checks: yellow vanishes on white and four are too light on the dark surface. So the
- * app shows each seeded category in a slot of the validated categorical palette, keyed by its
- * stored color, so a category keeps the same color on every screen and in both themes.
- * Validated with the dataviz script: light and dark sets pass, worst adjacent CVD ΔE 9.1 / 8.4.
+ * dataviz checks: yellow vanishes on white. So the app shows each seeded category in a slot of
+ * the validated categorical palette, keyed by its stored color, so a category keeps the same
+ * color on every screen. Validated with the dataviz script: worst adjacent CVD ΔE 9.1.
  */
 
-type Scheme = 'light' | 'dark';
-
-const SLOTS: Record<Scheme, readonly string[]> = {
-  //       blue       orange     aqua       yellow     magenta    green      violet     red
-  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'],
-  dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#0ca30c', '#9085e9', '#e66767'],
-};
+//               blue       orange     aqua       yellow     magenta    green      violet     red
+const SLOTS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'];
 
 /** "Other" and anything folded into it: a quiet neutral, never a ninth hue. */
-const OTHER: Record<Scheme, string> = { light: '#9aa1b1', dark: '#5d6478' };
+const OTHER = '#9aa1b1';
 
 /** Seeded category color (supabase/migrations/*_finance.sql) → palette slot, or 'other'. */
 const SLOT_BY_STORED_COLOR: Record<string, number | 'other'> = {
-  '#F97316': 1, // Хоол хүнс → orange
+  '#F97316': 1, // Хоол (was Хоол хүнс) → orange
+  '#16A34A': 5, // Хүнс → green
+  '#DB2777': 4, // Гоо сайхан → magenta
+  '#DC2626': 7, // Зээл → red
   '#0EA5E9': 0, // Тээвэр → blue
   '#EC4899': 4, // Дэлгүүр → magenta
   '#8B5CF6': 6, // Орон сууц → violet
@@ -35,16 +32,23 @@ const SLOT_BY_STORED_COLOR: Record<string, number | 'other'> = {
 };
 
 /**
+ * Colors a user can give their own category: the palette itself, stored upper-case.
+ */
+export const USER_CATEGORY_COLORS: readonly string[] = SLOTS.map((color) => color.toUpperCase());
+
+/**
  * The display color for a category. Categories an admin adds later (unknown stored color)
  * keep their own color.
  */
-export function categoryColor(storedColor: string | null | undefined, scheme: Scheme): string {
-  if (!storedColor) return OTHER[scheme];
-  const slot = SLOT_BY_STORED_COLOR[storedColor.toUpperCase()];
+export function categoryColor(storedColor: string | null | undefined): string {
+  if (!storedColor) return OTHER;
+  const upper = storedColor.toUpperCase();
+  if (USER_CATEGORY_COLORS.includes(upper)) return upper;
+  const slot = SLOT_BY_STORED_COLOR[upper];
   if (slot === undefined) return storedColor;
-  return slot === 'other' ? OTHER[scheme] : (SLOTS[scheme][slot] ?? OTHER[scheme]);
+  return slot === 'other' ? OTHER : (SLOTS[slot] ?? OTHER);
 }
 
-export function otherColor(scheme: Scheme): string {
-  return OTHER[scheme];
+export function otherColor(): string {
+  return OTHER;
 }

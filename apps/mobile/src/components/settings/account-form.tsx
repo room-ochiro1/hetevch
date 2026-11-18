@@ -4,13 +4,16 @@ import {
   ageFromBirthYear,
   formatLongDate,
   parseBirthYear,
+  parseGender,
   toISODate,
+  type Gender,
   type Profile,
 } from '@hetevch/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { GenderField } from '@/components/settings/gender-field';
 import { SettingsGroup } from '@/components/settings/settings-group';
 import { SettingsRow } from '@/components/settings/settings-row';
 import { ThemedText } from '@/components/themed-text';
@@ -20,16 +23,19 @@ import { Spacing } from '@/constants/theme';
 import { deleteAccount, updateProfile } from '@/lib/account';
 import { useFinanceData } from '@/providers/finance-data';
 
-/** Edit the name and birth year, see when the account began, and delete the account. */
+/** Edit the name, birth year and gender, see when the account began, delete the account. */
 export function AccountForm({ profile }: { profile: Profile }) {
   const { invalidate } = useFinanceData();
   const savedName = profile.full_name?.trim() ?? '';
   const savedYear = profile.birth_year ? String(profile.birth_year) : '';
   const [name, setName] = useState(savedName);
   const [yearText, setYearText] = useState(savedYear);
+  const savedGender = parseGender(profile.gender);
+  const [gender, setGender] = useState<Gender | null>(savedGender);
   const [busy, setBusy] = useState<'saving' | 'deleting' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const changed = name.trim() !== savedName || yearText.trim() !== savedYear;
+  const changed =
+    name.trim() !== savedName || yearText.trim() !== savedYear || gender !== savedGender;
   const birthYear = parseBirthYear(yearText);
 
   async function save() {
@@ -39,7 +45,7 @@ export function AccountForm({ profile }: { profile: Profile }) {
     }
     setBusy('saving');
     setError(null);
-    const saveError = await updateProfile(profile.id, { fullName: name, birthYear });
+    const saveError = await updateProfile(profile.id, { fullName: name, birthYear, gender });
     setBusy(null);
     if (saveError) {
       setError(saveError);
@@ -96,6 +102,7 @@ export function AccountForm({ profile }: { profile: Profile }) {
             Энэ жил {ageFromBirthYear(birthYear)} нас хүрнэ.
           </ThemedText>
         ) : null}
+        <GenderField value={gender} onChange={setGender} />
         <Button
           title="Хадгалах"
           onPress={save}

@@ -1,6 +1,6 @@
 ---
 name: verify-mobile
-description: Prove a Hetevch mobile change works beyond typecheck — Metro bundling, the Android emulator (screenshots, JS logs) and light/dark checks. Use before telling the user a mobile change is done, when a screen "doesn't open", or when Metro/LogBox shows warnings.
+description: Prove a Hetevch mobile change works beyond typecheck — Metro bundling, the Android emulator (screenshots, JS logs). Use before telling the user a mobile change is done, when a screen "doesn't open", or when Metro/LogBox shows warnings.
 ---
 
 # Verify a mobile change
@@ -30,7 +30,7 @@ Strings in JSX are escaped in the bundle, so search for file paths (e.g. `saving
 - adb lives under `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe` (on this machine a junction to the Claude-packaged SDK).
 - Read-only checks need no permission: `adb devices`, `adb exec-out screencap -p > shot.png` (then view the PNG), `adb logcat -d -s ReactNativeJS:V` for console warnings. Always add `-d` or a timeout; plain `logcat` waits for ever when no device is attached.
 - **Taps, key events and settings changes need the user's OK** (it is their emulator and app state). If refused, say what you could not check and ask the user to look.
-- Check both themes before calling UI done (`design-guide`): the light/dark switch is in the home drawer.
+- The app is light only (app.json `userInterfaceStyle: light`, no dark palette): one screenshot per screen is enough.
 
 ## 4. Report honestly
 

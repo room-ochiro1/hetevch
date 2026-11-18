@@ -4,6 +4,7 @@ import { addDays, fromISODate, type Currency } from '@hetevch/shared';
 import { cache } from 'react';
 
 import { toAgeBand, type AgeBand } from '@/lib/age-bands';
+import type { Sex } from '@/lib/sex';
 import { requireAdmin } from '@/lib/dal/auth';
 import { type RangeDays, todayInUlaanbaatar } from '@/lib/range';
 import { createClient } from '@/lib/supabase/server';
@@ -41,6 +42,11 @@ export type SavingsCardRow = {
 
 export type Research = {
   days: RangeDays;
+  /** The age band the page is filtered to, or null for everyone. */
+  band: AgeBand | null;
+  /** Every band, even when filtered (the age distribution always shows all of them). */
+  allBands: BandRow[];
+  /** Rows below are narrowed to `band` when one is chosen. */
   bands: BandRow[];
   spending: CategoryAgeRow[];
   weekdays: WeekdayAgeRow[];
@@ -63,17 +69,21 @@ function isoWeekday(day: string): number {
  * Everything the Судалгаа page shows for one period, in one round of queries. Cached per
  * request so its sections share it. Users only: admin accounts are left out in SQL.
  */
-export const getResearch = cache(async (days: RangeDays): Promise<Research> => {
+export const getResearch = cache(async (
+  days: RangeDays,
+  band: AgeBand | null,
+  sex: Sex | null = null,
+): Promise<Research> => {
   await requireAdmin();
   const supabase = await createClient();
-  const period = { period_days: days };
+  const period = { period_days: days, p_sex: sex ?? undefined };
 
   const [bands, spending, weekdays, cards, flow] = await Promise.all([
-    supabase.rpc('admin_age_bands', period),
-    supabase.rpc('admin_category_by_age', { ...period, p_kind: 'expense' }),
-    supabase.rpc('admin_weekday_by_age', period),
-    supabase.rpc('admin_savings_cards', { max_rows: 200 }),
-    supabase.rpc('admin_savings_flow', period),
+    supabase.rpc('admin_age_bands_by_sex', period),
+    supabase.rpc('admin_category_by_age_by_sex', { ...period, p_kind: 'expense' }),
+    supabase.rpc('admin_weekday_by_age_by_sex', period),
+    supabase.rpc('admin_savings_cards_by_sex', { max_rows: 200, p_sex: sex ?? undefined }),
+    supabase.rpc('admin_savings_flow_by_segment', { ...period, p_age_band: band ?? undefined }),
   ]);
   if (bands.error) fail('age bands', bands.error.message);
   if (spending.error) fail('spending by age', spending.error.message);
@@ -88,9 +98,8 @@ export const getResearch = cache(async (days: RangeDays): Promise<Research> => {
     weekdayCounts[index] = (weekdayCounts[index] ?? 0) + 1;
   }
 
-  return {
-    days,
-    bands: bands.data.map((r) => ({
+  const keep = <T extends { band: AgeBand }>(rows: T[]) => (band ? rows.filter((r) => r.band === band) : rows);
+  const allBands = bands.data.map((r) => ({
       band: toAgeBand(r.band),
       users: Number(r.users),
       activeUsers: Number(r.active_users),
@@ -99,22 +108,28 @@ export const getResearch = cache(async (days: RangeDays): Promise<Research> => {
       savers: Number(r.savers),
       savedMnt: Number(r.saved_mnt),
       savedUsd: Number(r.saved_usd),
-    })),
-    spending: spending.data.map((r) => ({
+  }));
+
+  return {
+    days,
+    band,
+    allBands,
+    bands: keep(allBands),
+    spending: keep(spending.data.map((r) => ({
       band: toAgeBand(r.band),
       categoryId: r.category_id,
       name: r.name,
       icon: r.icon,
       total: Number(r.total),
-    })),
-    weekdays: weekdays.data.map((r) => ({
+    }))),
+    weekdays: keep(weekdays.data.map((r) => ({
       band: toAgeBand(r.band),
       weekday: Number(r.weekday),
       expense: Number(r.expense),
       txCount: Number(r.tx_count),
-    })),
+    }))),
     weekdayCounts,
-    cards: cards.data.map((r) => ({
+    cards: keep(cards.data.map((r) => ({
       id: r.account_id,
       userId: r.user_id,
       owner: r.full_name?.trim() || r.email || 'Нэргүй хэрэглэгч',
@@ -128,7 +143,7 @@ export const getResearch = cache(async (days: RangeDays): Promise<Research> => {
       entries: Number(r.entries),
       lastMovedOn: r.last_moved_on,
       createdAt: r.created_at,
-    })),
+    }))),
     flow: flow.data.map((r) => ({
       weekStart: r.week_start,
       currency: r.currency,

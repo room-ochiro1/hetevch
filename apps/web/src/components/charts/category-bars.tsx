@@ -1,4 +1,6 @@
 import { formatMoney } from '@hetevch/shared';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import type { CategoryTotal } from '@/lib/dal/overview';
@@ -11,10 +13,23 @@ type CategoryBarsProps = {
   /** Bar color class: one hue for all bars, since identity comes from the labels. */
   barClass: string;
   emptyTitle: string;
+  /** When set, each row opens that category's detail dialog. */
+  hrefFor?: (categoryId: string) => string;
 };
 
+function Row({ href, children }: { href: string | undefined; children: ReactNode }) {
+  const box = 'flex flex-col gap-1.5';
+  return href ? (
+    <Link href={href} scroll={false} className={`${box} -mx-2 rounded-lg px-2 py-1 hover:bg-surface-2`}>
+      {children}
+    </Link>
+  ) : (
+    <div className={box}>{children}</div>
+  );
+}
+
 /** Ranked horizontal bars, largest first: amount at the end, share and count underneath. */
-export function CategoryBars({ categories, total, barClass, emptyTitle }: CategoryBarsProps) {
+export function CategoryBars({ categories, total, barClass, emptyTitle, hrefFor }: CategoryBarsProps) {
   if (categories.length === 0) {
     return <EmptyState title={emptyTitle} hint="Хэрэглэгчид гүйлгээ бүртгэхээр энд харагдана." />;
   }
@@ -26,7 +41,8 @@ export function CategoryBars({ categories, total, barClass, emptyTitle }: Catego
       {categories.map((category) => {
         const share = base > 0 ? Math.round((category.total / base) * 100) : 0;
         return (
-          <li key={category.categoryId} className="flex flex-col gap-1.5">
+          <li key={category.categoryId}>
+            <Row href={hrefFor?.(category.categoryId)}>
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="flex min-w-0 items-center gap-2">
                 <span aria-hidden className="text-base">
@@ -44,7 +60,9 @@ export function CategoryBars({ categories, total, barClass, emptyTitle }: Catego
             </div>
             <p className="text-xs text-muted tabular-nums">
               {share}% · {formatCount(category.txCount)} гүйлгээ
+              {hrefFor ? <span className="ml-1 text-accent-text">· дэлгэрэнгүй ›</span> : null}
             </p>
+            </Row>
           </li>
         );
       })}

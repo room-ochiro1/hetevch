@@ -8,7 +8,7 @@ import { Panel } from '@/components/ui/panel';
 import { AGE_BANDS, AGE_BAND_LABELS, MIN_SAMPLE, WEEKDAY_LABELS } from '@/lib/age-bands';
 import { getResearch } from '@/lib/dal/research';
 import { formatCount } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import type { Filters } from '@/lib/filters';
 
 const money = (value: number) => formatMoney(Math.round(value));
 const EMPTY_HINT = 'Хэрэглэгчид зарлага бүртгэхэд 7 хоногийн аль өдөр илүү зарцуулдаг нь энд гарна.';
@@ -17,8 +17,9 @@ const EMPTY_HINT = 'Хэрэглэгчид зарлага бүртгэхэд 7 �
  * Which weekday money goes out: the average per day (a total would favour weekdays that
  * happen to occur more often in the period), then each age band's week split by day.
  */
-export async function WeekdayPanels({ days }: { days: RangeDays }) {
-  const research = await getResearch(days);
+export async function WeekdayPanels({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const research = await getResearch(days, band, sex);
   const averages = weekdayAverages(research);
   const counts = WEEKDAY_LABELS.map((_, i) =>
     research.weekdays.filter((row) => row.weekday === i + 1).reduce((sum, row) => sum + row.txCount, 0),

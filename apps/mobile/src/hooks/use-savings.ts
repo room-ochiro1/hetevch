@@ -1,4 +1,10 @@
-import { SAVINGS_CARD_SELECT, type SavingsCard } from '@hetevch/shared';
+import {
+  SAVINGS_CARD_SELECT,
+  SAVINGS_MOVE_SELECT,
+  type DateRange,
+  type SavingsCard,
+  type SavingsMove,
+} from '@hetevch/shared';
 
 import { useSupabaseQuery, type QueryResult } from '@/hooks/use-supabase-query';
 import { supabase } from '@/lib/supabase';
@@ -39,4 +45,25 @@ export function useSavingsCard(id: string | undefined): QueryResult<SavingsCard>
       .single();
     return { data: data ? sortEntries(data) : null, error };
   });
+}
+
+/**
+ * Money the user moved into or out of savings cards in a date range, newest first. Only rows
+ * with a tögrög value: those are the ones that move the balance.
+ */
+export function useSavingsMoves(range: DateRange): QueryResult<SavingsMove[]> {
+  const userId = useAuth().session?.user.id ?? null;
+  const key = userId && `savings-moves:${userId}:${range.from}:${range.to}`;
+
+  return useSupabaseQuery<SavingsMove[]>(key, () =>
+    supabase
+      .from('savings_entries')
+      .select(SAVINGS_MOVE_SELECT)
+      .eq('user_id', userId ?? '')
+      .not('base_amount', 'is', null)
+      .gte('occurred_on', range.from)
+      .lt('occurred_on', range.to)
+      .order('occurred_on', { ascending: false })
+      .order('created_at', { ascending: false }),
+  );
 }

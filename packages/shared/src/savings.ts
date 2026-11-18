@@ -22,6 +22,18 @@ export type SavingsCard = Tables['savings_accounts']['Row'] & { entries: Savings
 export const SAVINGS_CARD_SELECT =
   '*, entries:savings_entries(id, amount, occurred_on, note, created_at)';
 
+/**
+ * Money moved into (+) or out of (−) a card, with the card, as the transaction list shows it.
+ * `base_amount` is the tögrög value that moves the user's balance (null on old dollar rows).
+ */
+export type SavingsMove = Pick<
+  Tables['savings_entries']['Row'],
+  'id' | 'amount' | 'base_amount' | 'note' | 'occurred_on' | 'created_at'
+> & { card: Pick<Tables['savings_accounts']['Row'], 'id' | 'name' | 'icon' | 'color'> | null };
+
+export const SAVINGS_MOVE_SELECT =
+  'id, amount, base_amount, note, occurred_on, created_at, card:savings_accounts(id, name, icon, color)';
+
 /** A sum that starts earning interest on `date` (negative for money taken out). */
 type Flow = { amount: number; date: string };
 

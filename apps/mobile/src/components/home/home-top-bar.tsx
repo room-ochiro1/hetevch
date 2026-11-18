@@ -1,11 +1,12 @@
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Radius } from '@/constants/theme';
 import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
 
-/** Only the user's avatar, top right; it opens the side menu (profile, theme, shortcuts). */
-export function HomeTopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
+/** Only the first letter of the user's name, top right; it opens the Profile tab. */
+export function HomeTopBar() {
   const theme = useTheme();
   const { data: profile } = useProfile();
   const initial = (profile?.full_name?.trim() || '?').charAt(0).toUpperCase();
@@ -14,8 +15,8 @@ export function HomeTopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
     <View style={styles.bar}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Профайл ба цэс"
-        onPress={onOpenMenu}
+        accessibilityLabel="Профайл"
+        onPress={() => router.navigate('/profile')}
         hitSlop={6}
         style={({ pressed }) => [
           styles.avatar,

@@ -1,7 +1,6 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 
 import { StartupError } from '@/components/onboarding/startup-error';
 import { Colors } from '@/constants/theme';
@@ -9,18 +8,16 @@ import { useTheme } from '@/hooks/use-theme';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 import { CurrencyProvider } from '@/providers/currency';
 import { FinanceDataProvider } from '@/providers/finance-data';
-import { ThemePreferenceProvider } from '@/providers/theme-preference';
 
 SplashScreen.preventAutoHideAsync();
 
 /** React Navigation theme built from our palette so headers and modals match the app. */
-function navigationTheme(scheme: 'light' | 'dark'): typeof DefaultTheme {
-  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
-  const palette = Colors[scheme];
+const NAVIGATION_THEME: typeof DefaultTheme = (() => {
+  const palette = Colors.light;
   return {
-    ...base,
+    ...DefaultTheme,
     colors: {
-      ...base.colors,
+      ...DefaultTheme.colors,
       primary: palette.accent,
       background: palette.background,
       card: palette.surface,
@@ -28,7 +25,7 @@ function navigationTheme(scheme: 'light' | 'dark'): typeof DefaultTheme {
       border: palette.border,
     },
   };
-}
+})();
 
 function RootNavigator() {
   const { session, isLoading, needsOnboarding, error, retry } = useAuth();
@@ -68,6 +65,9 @@ function RootNavigator() {
         <Stack.Screen name="(app)" />
         <Stack.Screen name="transaction" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/account" options={pushed('Хувийн мэдээлэл')} />
+        <Stack.Screen name="settings/categories" options={pushed('Ангилал')} />
+        <Stack.Screen name="statement" options={pushed('Хуулга')} />
+        <Stack.Screen name="settings/category" options={{ presentation: 'modal' }} />
         <Stack.Screen name="savings/calculator" options={pushed('Хүүгийн тооцоолуур')} />
         <Stack.Screen name="savings/[id]" options={pushed('Хадгаламж')} />
         <Stack.Screen name="savings/edit" options={{ presentation: 'modal' }} />
@@ -78,17 +78,17 @@ function RootNavigator() {
       </Stack.Protected>
       {/* Open to everyone: the welcome screen links to the terms and the privacy policy. */}
       <Stack.Screen name="help" options={pushed('Түгээмэл асуулт')} />
+      {/* Developer-only preview of the first-launch form (redirects home in release builds). */}
+      <Stack.Screen name="welcome-preview" />
       <Stack.Screen name="legal/terms" options={pushed('Үйлчилгээний нөхцөл')} />
       <Stack.Screen name="legal/privacy" options={pushed('Нууцлалын бодлого')} />
     </Stack>
   );
 }
 
-function ThemedRoot() {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-
+export default function RootLayout() {
   return (
-    <ThemeProvider value={navigationTheme(scheme)}>
+    <ThemeProvider value={NAVIGATION_THEME}>
       <AuthProvider>
         <CurrencyProvider>
           <FinanceDataProvider>
@@ -97,13 +97,5 @@ function ThemedRoot() {
         </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
-  );
-}
-
-export default function RootLayout() {
-  return (
-    <ThemePreferenceProvider>
-      <ThemedRoot />
-    </ThemePreferenceProvider>
   );
 }

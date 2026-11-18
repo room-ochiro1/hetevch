@@ -50,6 +50,11 @@ export type EntryDraft = {
   accountId: string;
   /** Positive to put money in, negative to take it out (card's currency). */
   amount: number;
+  /**
+   * The same movement in tögrög, for the user's balance. Dollar cards send amount × today's
+   * rate; tögrög cards send null (the database fills it).
+   */
+  baseAmount: number | null;
   occurredOn: string;
   note: string;
 };
@@ -58,6 +63,7 @@ export async function addSavingsEntry(draft: EntryDraft): Promise<string | null>
   const { error } = await supabase.from('savings_entries').insert({
     account_id: draft.accountId,
     amount: draft.amount,
+    base_amount: draft.baseAmount,
     occurred_on: draft.occurredOn,
     note: draft.note.trim() || null,
   });

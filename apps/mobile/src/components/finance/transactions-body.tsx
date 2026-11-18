@@ -1,7 +1,7 @@
-import type { TransactionListItem } from '@hetevch/shared';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { openNewTransaction } from '@/components/finance/kind-options';
+import type { MoneyMove } from '@/components/finance/money-moves';
 import { TransactionList } from '@/components/finance/transaction-list';
 import { Button } from '@/components/ui/button';
 import { StateMessage } from '@/components/ui/state-message';
@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { QueryResult } from '@/hooks/use-supabase-query';
 
 type TransactionsBodyProps = {
-  result: QueryResult<TransactionListItem[]>;
+  result: QueryResult<MoneyMove[]>;
   grouped?: boolean;
   emptyTitle: string;
   emptyBody?: string;
@@ -18,7 +18,7 @@ type TransactionsBodyProps = {
   emptyActionLabel?: string;
 };
 
-/** A transaction query's loading, error, empty and list states in one place. */
+/** The list's loading, error, empty and list states in one place. */
 export function TransactionsBody({
   result,
   grouped,

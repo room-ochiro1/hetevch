@@ -12,7 +12,7 @@ type MatrixHeatmapProps = {
   cols: MatrixCol[];
   /** 0–1 per cell (rows × cols); each row is one group's split, so rows compare fairly. */
   shares: number[][];
-  /** Readout per cell, e.g. "25–34 нас · Хоол хүнс: 120,000 ₮ (34%)". */
+  /** Readout per cell, e.g. "25–34 нас · Хоол: 120,000 ₮ (34%)". */
   details: string[][];
   label: string;
   /** Widths in rem: narrow columns let a 7-day grid fit a half-width panel. */

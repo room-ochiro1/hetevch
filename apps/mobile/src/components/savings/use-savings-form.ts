@@ -2,6 +2,7 @@ import {
   formatAmountInput,
   parseAmount,
   parseRate,
+  toCardCurrency,
   toISODate,
   type Compounding,
   type Currency,
@@ -29,13 +30,19 @@ const amountText = (value: number | null | undefined) =>
   value ? formatAmountInput(String(value)) : '';
 
 /** State and actions of the add/edit card form; closes the sheet when done. */
+/** Deleting a card also deletes its movements, so money put in returns to the balance. */
+const DELETE_CARD_MESSAGE =
+  'Карт болон түүний бүх гүйлгээ устах ба сэргээх боломжгүй. Картанд хийсэн мөнгө таны үлдэгдэлд буцаж нэмэгдэнэ.';
+
 export function useSavingsForm(initial?: SavingsCard, preset?: SavingsPreset) {
   const { invalidate } = useFinanceData();
   const displayCurrency = useMoney().currency;
   const [name, setName] = useState(initial?.name ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? CARD_ICONS[0]);
   const [color, setColor] = useState<string>(initial?.color ?? ('indigo' satisfies CardColor));
-  const [currency, setCurrency] = useState<Currency>(initial?.currency ?? preset?.currency ?? displayCurrency);
+  const [currency, setCurrency] = useState<Currency>(
+    initial?.currency ?? preset?.currency ?? toCardCurrency(displayCurrency),
+  );
   const [goalText, setGoalText] = useState(amountText(initial?.goal_amount));
   const [principalText, setPrincipalText] = useState(amountText(initial?.principal ?? preset?.principal));
   const startRate = initial?.annual_rate ?? preset?.annualRate;
@@ -89,7 +96,7 @@ export function useSavingsForm(initial?: SavingsCard, preset?: SavingsPreset) {
   function confirmDelete() {
     const id = initial?.id;
     if (!id) return;
-    Alert.alert('Картыг устгах уу?', 'Карт болон түүний бүх гүйлгээ устах ба сэргээх боломжгүй.', [
+    Alert.alert('Картыг устгах уу?', DELETE_CARD_MESSAGE, [
       { text: 'Болих', style: 'cancel' },
       {
         text: 'Устгах',

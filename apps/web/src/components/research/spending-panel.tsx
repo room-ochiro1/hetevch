@@ -5,14 +5,15 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Panel } from '@/components/ui/panel';
 import { AGE_BANDS, AGE_BAND_LABELS, MIN_SAMPLE } from '@/lib/age-bands';
 import { getResearch } from '@/lib/dal/research';
-import type { RangeDays } from '@/lib/range';
+import type { Filters } from '@/lib/filters';
 
 /** Columns beyond this many categories fold into "Бусад" so the grid stays readable. */
 const TOP_CATEGORIES = 7;
 
 /** What each age band spends on: every row is that band's spending split by category. */
-export async function SpendingPanel({ days }: { days: RangeDays }) {
-  const { spending, bands } = await getResearch(days);
+export async function SpendingPanel({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const { spending, bands } = await getResearch(days, band, sex);
 
   const byCategory = new Map<string, { label: string; total: number }>();
   for (const row of spending) {

@@ -16,24 +16,38 @@ import { useAuth } from '@/providers/auth-provider';
  * users' rows, but in the app even the owner should only see their own money.
  */
 
-function useUserId(): string | null {
+export function useUserId(): string | null {
   const { session } = useAuth();
   return session?.user.id ?? null;
 }
 
-/** All categories, in display order. They rarely change, so the key ignores the user. */
+/**
+ * The built-in categories (no owner) plus the user's own, in display order: built-ins first,
+ * then the user's in the order they were added. Keyed by user, since each sees different ones.
+ */
 export function useCategories(): QueryResult<Category[]> {
-  return useSupabaseQuery('categories', () =>
-    supabase.from('categories').select('*').order('sort_order'),
+  const userId = useUserId();
+  return useSupabaseQuery(userId && `categories:${userId}`, () =>
+    supabase
+      .from('categories')
+      .select('*')
+      .or(`owner_id.is.null,owner_id.eq.${userId ?? ''}`)
+      .order('sort_order')
+      .order('created_at'),
   );
 }
 
-type TransactionsOptions = { range?: DateRange; limit?: number };
+type TransactionsOptions = { range?: DateRange; limit?: number; categoryId?: string };
 
-/** The user's transactions, newest first, optionally limited to a date range or a count. */
-export function useTransactions({ range, limit }: TransactionsOptions = {}) {
+/**
+ * The user's transactions, newest first, optionally limited to a date range, a category or
+ * a count.
+ */
+export function useTransactions({ range, limit, categoryId }: TransactionsOptions = {}) {
   const userId = useUserId();
-  const key = userId && `tx:${userId}:${range?.from ?? ''}:${range?.to ?? ''}:${limit ?? ''}`;
+  const key =
+    userId &&
+    `tx:${userId}:${range?.from ?? ''}:${range?.to ?? ''}:${limit ?? ''}:${categoryId ?? ''}`;
 
   return useSupabaseQuery<TransactionListItem[]>(key, () => {
     let query = supabase
@@ -43,8 +57,22 @@ export function useTransactions({ range, limit }: TransactionsOptions = {}) {
       .order('occurred_on', { ascending: false })
       .order('created_at', { ascending: false });
     if (range) query = query.gte('occurred_on', range.from).lt('occurred_on', range.to);
+    if (categoryId) query = query.eq('category_id', categoryId);
     if (limit) query = query.limit(limit);
     return query;
+  });
+}
+
+/** Income and expense totals (transactions only) for a date range. */
+export function useTotals(range: DateRange): QueryResult<Totals> {
+  const userId = useUserId();
+  const key = userId && `totals:${userId}:${range.from}:${range.to}`;
+
+  return useSupabaseQuery<Totals>(key, async () => {
+    const { data, error } = await supabase
+      .rpc('my_finance_totals', { p_from: range.from, p_to: range.to })
+      .single();
+    return { data: data ? toTotals(Number(data.income), Number(data.expense)) : null, error };
   });
 }
 
@@ -63,17 +91,15 @@ export function useTransaction(id: string | undefined) {
   );
 }
 
-/** Income, expense and net for a date range, or all time (the balance) without one. */
-export function useTotals(range?: DateRange): QueryResult<Totals> {
+/**
+ * The user's balance in tögrög: all income − all expense − money moved into savings cards
+ * (taking money out of a card adds it back). A card's opening balance does not count.
+ */
+export function useBalance(): QueryResult<number> {
   const userId = useUserId();
-  const key = userId && `totals:${userId}:${range?.from ?? ''}:${range?.to ?? ''}`;
 
-  return useSupabaseQuery<Totals>(key, async () => {
-    const args = range ? { p_from: range.from, p_to: range.to } : {};
-    const { data, error } = await supabase.rpc('my_finance_totals', args).single();
-    return {
-      data: data ? toTotals(Number(data.income), Number(data.expense)) : null,
-      error,
-    };
+  return useSupabaseQuery<number>(userId && `balance:${userId}`, async () => {
+    const { data, error } = await supabase.rpc('my_balance');
+    return { data: data === null ? null : Number(data), error };
   });
 }

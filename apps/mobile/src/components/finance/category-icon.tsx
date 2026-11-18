@@ -11,8 +11,8 @@ type CategoryIconProps = {
 
 /** The category's emoji on a soft tile of its chart color. Decorative: rows announce the name. */
 export function CategoryIcon({ category, size = 44 }: CategoryIconProps) {
-  const { colorOf, scheme } = useCategoryColor();
-  const tint = withAlpha(colorOf(category?.color), scheme === 'dark' ? 0.24 : 0.16);
+  const { colorOf } = useCategoryColor();
+  const tint = withAlpha(colorOf(category?.color), 0.16);
 
   return (
     <View

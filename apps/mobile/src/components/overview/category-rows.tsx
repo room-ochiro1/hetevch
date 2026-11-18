@@ -1,116 +1,65 @@
-import { type CategoryShare, type CategorySummary, type TransactionKind } from '@hetevch/shared';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { type CategoryShare, type CategorySummary } from '@hetevch/shared';
+import { StyleSheet, View } from 'react-native';
 
-import { CategoryIcon } from '@/components/finance/category-icon';
-import { openNewTransaction } from '@/components/finance/kind-options';
+import type { CardSavings } from '@/components/overview/savings-by-card';
+import { ShareRow } from '@/components/overview/share-row';
+import type { StatementTarget } from '@/components/statement/open-statement';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useCategoryColor } from '@/hooks/use-category-color';
-import { useMoney } from '@/hooks/use-money';
-import { useTheme } from '@/hooks/use-theme';
 
 type CategoryRowsProps = {
   shares: readonly CategoryShare<CategorySummary>[];
-  kind: TransactionKind;
+  /** Savings cards that gained money in the period, as the ring shows them. */
+  savings: readonly (CardSavings & { share: number })[];
+  /** Opens the tapped category's (or savings') statement for the period on screen. */
+  onOpen: (target: StatementTarget) => void;
 };
 
 /**
  * The ring's legend and its numbers: one row per category with amount, share and a bar in
- * the category's color. Tapping a row adds to that category, so logging is "pick, type, save".
+ * the category's color. Tapping a row opens its statement (every transaction, totals, change);
+ * adding happens there. Savings cards come first, in their own colours (usually the biggest).
  */
-export function CategoryRows({ shares, kind }: CategoryRowsProps) {
-  const theme = useTheme();
+export function CategoryRows({ shares, savings, onOpen }: CategoryRowsProps) {
   const { colorOf } = useCategoryColor();
-  const money = useMoney();
 
   return (
     <View style={styles.list}>
       <ThemedText type="caption" themeColor="textSecondary" style={styles.hint}>
-        Ангилал дээр дарж шууд нэмнэ
+        Ангилал дээр дарж хуулгыг нь харна
       </ThemedText>
-      {shares.map(({ category, total, share }) => {
-        const percent = Math.round(share * 100);
-        return (
-          <Pressable
-            key={category.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${category.name}: ${money.format(total)}, ${percent} хувь`}
-            accessibilityHint={`${category.name} ангилалд шинэ гүйлгээ нэмнэ`}
-            onPress={() => openNewTransaction({ kind, categoryId: category.id })}
-            style={({ pressed }) => [
-              styles.row,
-              { backgroundColor: pressed ? theme.backgroundElement : theme.surface },
-            ]}>
-            <CategoryIcon category={category} size={42} />
-            <View style={styles.body}>
-              <View style={styles.line}>
-                <ThemedText type="smallBold" numberOfLines={1} style={styles.name}>
-                  {category.name}
-                </ThemedText>
-                <ThemedText type="smallBold" style={styles.tabular}>
-                  {money.format(total)}
-                </ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary" style={styles.percent}>
-                  {percent}%
-                </ThemedText>
-              </View>
-              <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
-                <View
-                  style={[
-                    styles.fill,
-                    { width: `${Math.max(share * 100, 2)}%`, backgroundColor: colorOf(category.color) },
-                  ]}
-                />
-              </View>
-            </View>
-          </Pressable>
-        );
-      })}
+      {savings.map((card) => (
+        <ShareRow
+          key={card.cardId}
+          icon={card.icon}
+          iconColor={card.color}
+          barColor={card.color}
+          name={card.name}
+          total={card.total}
+          share={card.share}
+          onPress={() => onOpen({ type: 'savings', cardId: card.cardId })}
+          accessibilityHint="Энэ хадгаламжийн картын хуулгыг нээнэ. Зарлагад тооцогдохгүй."
+        />
+      ))}
+      {shares.map(({ category, total, share }) => (
+        <ShareRow
+          key={category.id}
+          icon={category.icon}
+          iconColor={category.color}
+          barColor={colorOf(category.color)}
+          name={category.name}
+          total={total}
+          share={share}
+          onPress={() => onOpen({ type: 'category', id: category.id })}
+          accessibilityHint={`${category.name} ангиллын хуулгыг нээнэ`}
+        />
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  list: {
-    gap: Spacing.two,
-  },
-  hint: {
-    paddingHorizontal: Spacing.one,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    padding: Spacing.three,
-    borderRadius: Radius.large,
-  },
-  body: {
-    flex: 1,
-    gap: Spacing.two,
-  },
-  line: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: Spacing.two,
-  },
-  name: {
-    flex: 1,
-  },
-  tabular: {
-    fontVariant: ['tabular-nums'],
-  },
-  percent: {
-    width: 36,
-    textAlign: 'right',
-    fontVariant: ['tabular-nums'],
-  },
-  track: {
-    height: 4,
-    borderRadius: Radius.pill,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: Radius.pill,
-  },
+  list: { gap: Spacing.two },
+  hint: { paddingHorizontal: Spacing.one },
 });

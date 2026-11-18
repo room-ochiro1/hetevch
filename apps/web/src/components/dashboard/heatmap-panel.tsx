@@ -3,12 +3,13 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Panel } from '@/components/ui/panel';
 import { getActivityHeatmap } from '@/lib/dal/analytics';
 import { formatCount } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import type { Filters } from '@/lib/filters';
 
 const WEEKDAYS = ['Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба', 'Ням'];
 
-export async function HeatmapPanel({ days }: { days: RangeDays }) {
-  const cells = await getActivityHeatmap(days);
+export async function HeatmapPanel({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const cells = await getActivityHeatmap(days, band, sex);
   const peak = cells.reduce<(typeof cells)[number] | null>(
     (best, cell) => (!best || cell.count > best.count ? cell : best),
     null,

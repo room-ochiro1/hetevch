@@ -8,3 +8,6 @@ node_modules/
 .DS_Store
 supabase/.temp/
 supabase/.branches/
+
+# Database backups taken by pnpm db:deploy: real users' personal data. Never commit.
+backups/

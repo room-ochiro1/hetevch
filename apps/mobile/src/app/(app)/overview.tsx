@@ -2,9 +2,11 @@ import { KIND_LABELS } from '@hetevch/shared';
 import { StyleSheet, View } from 'react-native';
 
 import { KIND_OPTIONS, openNewTransaction } from '@/components/finance/kind-options';
+import { CalendarCard } from '@/components/overview/calendar-card';
 import { CategoryRows } from '@/components/overview/category-rows';
 import { PeriodCard } from '@/components/overview/period-card';
 import { useOverview } from '@/components/overview/use-overview';
+import { openStatement } from '@/components/statement/open-statement';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
@@ -30,6 +32,7 @@ export default function OverviewScreen() {
         accessibilityLabel="Зарлага эсвэл орлого"
       />
       <PeriodCard overview={overview} />
+      <CalendarCard overview={overview} />
 
       {overview.error ? (
         <StateMessage
@@ -38,7 +41,7 @@ export default function OverviewScreen() {
           title="Мэдээлэл ачаалж чадсангүй"
           body="Интернэт холболтоо шалгаад доош татаж дахин оролдоно уу."
         />
-      ) : !overview.loading && overview.shares.length === 0 ? (
+      ) : !overview.loading && overview.shares.length === 0 && overview.savings.length === 0 ? (
         <View style={styles.empty}>
           <StateMessage
             icon={overview.kind === 'expense' ? '🧾' : '💼'}
@@ -51,7 +54,13 @@ export default function OverviewScreen() {
           />
         </View>
       ) : (
-        <CategoryRows shares={overview.shares} kind={overview.kind} />
+        <CategoryRows
+          shares={overview.shares}
+          savings={overview.savings}
+          onOpen={(target) =>
+            openStatement(target, { kind: overview.kind, period: overview.period, anchor: overview.anchor })
+          }
+        />
       )}
     </Screen>
   );

@@ -144,3 +144,11 @@ export const ArrowLeftIcon = createIcon(
     <path d="M19 12H5" />
   </>,
 );
+
+export const XIcon = createIcon(
+  'X',
+  <>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </>,
+);

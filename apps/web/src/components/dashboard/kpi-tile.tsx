@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Sparkline } from '@/components/charts/sparkline';
 import type { IconComponent } from '@/components/ui/icons';
 import { changeRatio } from '@/lib/chart-scale';
@@ -13,6 +15,8 @@ type KpiTileProps = {
   /** 'up-good' colors a rise green and a fall red; 'neutral' keeps the delta gray. */
   polarity?: 'up-good' | 'neutral';
   trend: number[];
+  /** Opens a detail dialog with the breakdown behind this number. */
+  href?: string;
 };
 
 /** Stat tile: label · value · signed change vs the previous period · sparkline. */
@@ -25,6 +29,7 @@ export function KpiTile({
   versus,
   polarity = 'up-good',
   trend,
+  href,
 }: KpiTileProps) {
   const ratio = changeRatio(current, previous);
   const direction = ratio === null || ratio > 0 ? 'up' : ratio < 0 ? 'down' : 'flat';
@@ -39,8 +44,8 @@ export function KpiTile({
       ? 'Шинэ'
       : `${direction === 'up' ? '▲' : direction === 'down' ? '▼' : '•'} ${Math.abs(Math.round(ratio * 100))}%`;
 
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
+  const body = (
+    <>
       <div className="flex items-center gap-2 text-sm text-muted">
         <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent-text">
           <Icon className="size-4" />
@@ -59,7 +64,20 @@ export function KpiTile({
         <span className={`font-semibold whitespace-nowrap ${tone}`}>{delta}</span>{' '}
         <span className="text-muted">{versus}</span>
       </p>
-    </div>
+    </>
+  );
+  const box = 'flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5';
+  return href ? (
+    <Link
+      href={href}
+      scroll={false}
+      title="Дэлгэрэнгүй харах"
+      className={`${box} transition-colors hover:border-foreground/30 hover:bg-surface-2/40`}
+    >
+      {body}
+    </Link>
+  ) : (
+    <div className={box}>{body}</div>
   );
 }
 

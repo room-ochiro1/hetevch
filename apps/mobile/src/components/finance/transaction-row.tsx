@@ -1,4 +1,4 @@
-import { formatDayLabel, type TransactionListItem } from '@hetevch/shared';
+import { formatLongDate, formatNumericDate, type TransactionListItem } from '@hetevch/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -8,29 +8,19 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useMoney } from '@/hooks/use-money';
 import { useTheme } from '@/hooks/use-theme';
 
-type TransactionRowProps = {
-  item: TransactionListItem;
-  /** Show the day under the amount; otherwise the time it was added (lists grouped by day). */
-  showDate?: boolean;
-};
+type TransactionRowProps = { item: TransactionListItem };
 
-/** "14:05" in the phone's time zone. */
-function formatClock(timestamp: string): string {
-  const date = new Date(timestamp);
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-/** One transaction on its own soft card; tapping opens it for editing. */
-export function TransactionRow({ item, showDate }: TransactionRowProps) {
+/** One transaction on its own soft card, dated like a bank statement; tapping edits it. */
+export function TransactionRow({ item }: TransactionRowProps) {
   const theme = useTheme();
   const name = item.category?.name ?? 'Ангилалгүй';
   const amount = useMoney().forKind(item);
-  const when = showDate ? formatDayLabel(item.occurred_on) : formatClock(item.created_at);
+  const when = formatNumericDate(item.occurred_on);
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${amount}, ${when}${item.note ? `, ${item.note}` : ''}`}
+      accessibilityLabel={`${name}, ${amount}, ${formatLongDate(item.occurred_on)}${item.note ? `, ${item.note}` : ''}`}
       accessibilityHint="Засах бол дарна уу"
       onPress={() => router.push({ pathname: '/transaction', params: { id: item.id } })}
       style={({ pressed }) => [

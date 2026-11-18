@@ -1,7 +1,8 @@
 import { formatAmount, formatMoney } from '@hetevch/shared';
+import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
-import { AGE_BANDS, AGE_BAND_LABELS, MIN_SAMPLE } from '@/lib/age-bands';
+import { AGE_BANDS, AGE_BAND_LABELS, MIN_SAMPLE, type AgeBand } from '@/lib/age-bands';
 import type { BandRow } from '@/lib/dal/research';
 import { formatCount } from '@/lib/format';
 
@@ -12,7 +13,15 @@ const per = (total: number, people: number) => (people > 0 ? money(total / peopl
  * One row per age band that has users. Averages are per person who did the thing (spent, or
  * saved), so a band full of new users doesn't look thrifty just because it is inactive.
  */
-export function AgeTable({ bands }: { bands: BandRow[] }) {
+type AgeTableProps = {
+  bands: BandRow[];
+  /** The band the page is filtered to: its row is highlighted. */
+  selected?: AgeBand | null;
+  /** When set, each band name opens that band's detail dialog. */
+  hrefFor?: (band: AgeBand) => string;
+};
+
+export function AgeTable({ bands, selected = null, hrefFor }: AgeTableProps) {
   const rows = AGE_BANDS.map((band) => bands.find((row) => row.band === band)).filter(
     (row): row is BandRow => Boolean(row && row.users > 0),
   );
@@ -33,10 +42,19 @@ export function AgeTable({ bands }: { bands: BandRow[] }) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.band} className="border-b border-border last:border-0">
+            <tr
+              key={row.band}
+              className={`border-b border-border last:border-0 ${row.band === selected ? 'bg-accent-soft/40' : ''}`}
+            >
               <th scope="row" className="py-2.5 pr-3 text-left font-medium">
                 <span className="flex flex-wrap items-center gap-1.5">
-                  {AGE_BAND_LABELS[row.band]}
+                  {hrefFor ? (
+                    <Link href={hrefFor(row.band)} scroll={false} className="underline decoration-dotted underline-offset-4 hover:decoration-solid">
+                      {AGE_BAND_LABELS[row.band]}
+                    </Link>
+                  ) : (
+                    AGE_BAND_LABELS[row.band]
+                  )}
                   {row.users < MIN_SAMPLE ? <Badge>бага түүвэр</Badge> : null}
                 </span>
                 <span className="block text-xs font-normal text-muted">{formatCount(row.users)} хүн</span>

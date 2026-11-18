@@ -34,6 +34,15 @@ export default function ProfileScreen() {
         />
       </SettingsGroup>
 
+      <SettingsGroup title="Санхүү">
+        <SettingsRow
+          icon="🏷️"
+          tone="peach"
+          label="Миний ангилал"
+          onPress={() => router.push('/settings/categories')}
+        />
+      </SettingsGroup>
+
       <CurrencySetting />
 
       <SettingsGroup title="Тусламж">

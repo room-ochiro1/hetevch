@@ -1,17 +1,18 @@
 import Link from 'next/link';
 
-import { RANGES, RANGE_LABELS, type RangeDays } from '@/lib/range';
+import { filterHref, type Filters } from '@/lib/filters';
+import { RANGES, RANGE_LABELS } from '@/lib/range';
 
-/** A page's one filter row: the period every section below uses (`basePath` = that page). */
-export function RangeTabs({ active, basePath = '/' }: { active: RangeDays; basePath?: string }) {
+/** The period every section below uses (`basePath` = that page). Keeps the age filter. */
+export function RangeTabs({ filters, basePath = '/' }: { filters: Filters; basePath?: string }) {
   return (
     <nav aria-label="Хугацаа" className="flex gap-1 rounded-xl bg-surface-2 p-1">
       {RANGES.map((days) => {
-        const selected = days === active;
+        const selected = days === filters.days;
         return (
           <Link
             key={days}
-            href={`${basePath}?range=${days}`}
+            href={filterHref(basePath, { ...filters, days })}
             scroll={false}
             aria-current={selected ? 'page' : undefined}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap ${

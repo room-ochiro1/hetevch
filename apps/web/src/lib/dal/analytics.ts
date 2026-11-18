@@ -3,9 +3,11 @@ import 'server-only';
 import { addDays } from '@hetevch/shared';
 import { cache } from 'react';
 
+import type { AgeBand } from '@/lib/age-bands';
 import { requireAdmin } from '@/lib/dal/auth';
 import { type RangeDays, todayInUlaanbaatar } from '@/lib/range';
 import { createClient } from '@/lib/supabase/server';
+import type { Sex } from '@/lib/sex';
 
 export type DailyMetric = {
   day: string;
@@ -42,7 +44,12 @@ function fail(what: string, message: string): never {
  * Everything the KPI row and the time-series charts need for one period. Cached per
  * request, so the several dashboard sections that call it share one round of queries.
  */
-export const getDashboard = cache(async (days: RangeDays): Promise<Dashboard> => {
+export const getDashboard = cache(async (
+  days: RangeDays,
+  band: AgeBand | null,
+  sex: Sex | null = null,
+): Promise<Dashboard> => {
+  const segment = { p_age_band: band ?? undefined, p_sex: sex ?? undefined };
   await requireAdmin();
   const supabase = await createClient();
   const today = todayInUlaanbaatar();
@@ -50,10 +57,10 @@ export const getDashboard = cache(async (days: RangeDays): Promise<Dashboard> =>
   const previousFrom = addDays(currentFrom, -days);
 
   const [overview, metrics, current, previous] = await Promise.all([
-    supabase.rpc('admin_overview'),
-    supabase.rpc('admin_daily_metrics', { period_days: days * 2 }),
-    supabase.rpc('admin_finance_totals', { p_from: currentFrom, p_to: addDays(today, 1) }),
-    supabase.rpc('admin_finance_totals', { p_from: previousFrom, p_to: currentFrom }),
+    supabase.rpc('admin_overview_by_segment', segment),
+    supabase.rpc('admin_daily_metrics_by_segment', { period_days: days * 2, ...segment }),
+    supabase.rpc('admin_finance_totals_by_segment', { p_from: currentFrom, p_to: addDays(today, 1), ...segment }),
+    supabase.rpc('admin_finance_totals_by_segment', { p_from: previousFrom, p_to: currentFrom, ...segment }),
   ]);
   if (overview.error) fail('overview', overview.error.message);
   if (metrics.error) fail('daily metrics', metrics.error.message);
@@ -88,10 +95,18 @@ export const getDashboard = cache(async (days: RangeDays): Promise<Dashboard> =>
 
 export type HeatmapCell = { weekday: number; hour: number; count: number };
 
-export async function getActivityHeatmap(days: RangeDays): Promise<HeatmapCell[]> {
+export async function getActivityHeatmap(
+  days: RangeDays,
+  band: AgeBand | null,
+  sex: Sex | null = null,
+): Promise<HeatmapCell[]> {
   await requireAdmin();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('admin_activity_heatmap', { period_days: days });
+  const { data, error } = await supabase.rpc('admin_activity_heatmap_by_segment', {
+    period_days: days,
+    p_age_band: band ?? undefined,
+    p_sex: sex ?? undefined,
+  });
   if (error) fail('activity heatmap', error.message);
   return (data ?? []).map((row) => ({
     weekday: Number(row.weekday),
@@ -104,21 +119,33 @@ export type TopUser = {
   id: string;
   name: string;
   email: string | null;
+  birthYear: number | null;
   txCount: number;
   income: number;
   expense: number;
   lastActive: string;
 };
 
-export async function getTopUsers(days: RangeDays, limit = 8): Promise<TopUser[]> {
+export async function getTopUsers(
+  days: RangeDays,
+  band: AgeBand | null,
+  sex: Sex | null = null,
+  limit = 8,
+): Promise<TopUser[]> {
   await requireAdmin();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc('admin_top_users', { period_days: days, max_rows: limit });
+  const { data, error } = await supabase.rpc('admin_top_users_by_segment', {
+    period_days: days,
+    max_rows: limit,
+    p_age_band: band ?? undefined,
+    p_sex: sex ?? undefined,
+  });
   if (error) fail('top users', error.message);
   return (data ?? []).map((row) => ({
     id: row.user_id,
     name: row.full_name ?? row.email ?? 'Нэргүй',
     email: row.email,
+    birthYear: row.birth_year,
     txCount: Number(row.tx_count),
     income: Number(row.income),
     expense: Number(row.expense),

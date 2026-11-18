@@ -43,4 +43,6 @@ export * from './currency';
 export * from './interest';
 export * from './savings';
 export * from './periods';
+export * from './categories';
 export * from './age';
+export * from './gender';

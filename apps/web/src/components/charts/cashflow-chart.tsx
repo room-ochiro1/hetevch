@@ -4,6 +4,7 @@ import { formatMoney, formatNet } from '@hetevch/shared';
 
 import { ChartTooltip, DataTable, Legend, TooltipRow, YTicks } from '@/components/charts/chart-parts';
 import { useChartCursor } from '@/components/charts/use-chart-cursor';
+import { type DayLink, useDayLink } from '@/components/charts/use-day-link';
 import { formatTick, niceMax } from '@/lib/chart-scale';
 import { formatShortDay } from '@/lib/format';
 
@@ -24,8 +25,9 @@ function scale(data: CashflowPoint[]) {
  * same scale (one unit = the same height on either side). Position carries the sign as well
  * as color, so it reads without color vision.
  */
-export function CashflowChart({ data, label }: { data: CashflowPoint[]; label: string }) {
+export function CashflowChart({ data, label, link }: { data: CashflowPoint[]; label: string; link?: DayLink }) {
   const { active, setActive, plotProps } = useChartCursor(data.length);
+  const open = useDayLink(link);
   const { up, down, total, base } = scale(data);
   const ticks = [
     { label: formatTick(up), at: 0 },
@@ -47,8 +49,13 @@ export function CashflowChart({ data, label }: { data: CashflowPoint[]; label: s
         <YTicks ticks={ticks} />
         <div
           {...plotProps}
+          onKeyDown={(event) => {
+            const day = active === null ? undefined : data[active]?.day;
+            if (open && day && event.key === 'Enter') open(day);
+            else plotProps.onKeyDown(event);
+          }}
           role="img"
-          aria-label={`${label}. Сум товчоор өдөр сонгоно.`}
+          aria-label={`${label}. Сум товчоор өдөр сонгоно${open ? ', Enter дарж дэлгэрэнгүйг нээнэ' : ''}.`}
           className="relative h-60 flex-1 rounded-sm outline-offset-4 focus-visible:outline-2 focus-visible:outline-accent"
         >
           <div aria-hidden className="absolute inset-x-0 top-0 border-t border-border" />
@@ -61,8 +68,9 @@ export function CashflowChart({ data, label }: { data: CashflowPoint[]; label: s
               return (
                 <div
                   key={d.day}
-                  className="relative h-full flex-1"
+                  className={`relative h-full flex-1 ${open ? 'cursor-pointer' : ''}`}
                   onMouseEnter={() => setActive(index)}
+                  onClick={open ? () => open(d.day) : undefined}
                 >
                   {active === index ? (
                     <div aria-hidden className="absolute inset-y-0 left-1/2 w-px bg-border" />
@@ -88,6 +96,7 @@ export function CashflowChart({ data, label }: { data: CashflowPoint[]; label: s
               <div className="mt-1 border-t border-border pt-1">
                 <TooltipRow label="зөрүү" value={formatNet(point.income - point.expense)} />
               </div>
+              {open ? <p className="mt-1 text-[11px] text-muted">Дарж дэлгэрэнгүйг харна</p> : null}
             </ChartTooltip>
           ) : null}
         </div>

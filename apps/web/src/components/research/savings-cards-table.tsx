@@ -6,13 +6,14 @@ import { Panel } from '@/components/ui/panel';
 import { AGE_BAND_LABELS } from '@/lib/age-bands';
 import { getResearch } from '@/lib/dal/research';
 import { formatCount, formatShortDay } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import type { Filters } from '@/lib/filters';
 
 const SHOWN = 50;
 
 /** Every user's savings cards, newest first, linking to the owner's page. */
-export async function SavingsCardsTable({ days }: { days: RangeDays }) {
-  const { cards } = await getResearch(days);
+export async function SavingsCardsTable({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const { cards } = await getResearch(days, band, sex);
   const shown = cards.slice(0, SHOWN);
 
   return (

@@ -3,6 +3,7 @@
 import { formatMoney } from '@hetevch/shared';
 import { useState } from 'react';
 
+import { type DayLink, useDayLink } from '@/components/charts/use-day-link';
 import { formatCount, formatShortDay } from '@/lib/format';
 
 export type DailyPoint = { day: string; value: number };
@@ -12,11 +13,14 @@ type DailyBarChartProps = {
   label: string;
   data: DailyPoint[];
   unit: 'count' | 'money';
+  /** Clicking a bar opens that day's detail dialog. */
+  link?: DayLink;
 };
 
 /** Single-series daily bar chart with a hover/focus tooltip and an accessible table. */
-export function DailyBarChart({ label, data, unit }: DailyBarChartProps) {
+export function DailyBarChart({ label, data, unit, link }: DailyBarChartProps) {
   const [active, setActive] = useState<number | null>(null);
+  const open = useDayLink(link);
   const format = unit === 'money' ? formatMoney : formatCount;
   const max = Math.max(1, ...data.map((point) => point.value));
   const total = data.reduce((sum, point) => sum + point.value, 0);
@@ -42,8 +46,9 @@ export function DailyBarChart({ label, data, unit }: DailyBarChartProps) {
               key={point.day}
               type="button"
               tabIndex={-1}
-              className="flex h-full flex-1 cursor-default items-end justify-center"
+              className={`flex h-full flex-1 items-end justify-center ${open ? 'cursor-pointer' : 'cursor-default'}`}
               onMouseEnter={() => setActive(index)}
+              onClick={open ? () => open(point.day) : undefined}
               aria-hidden
             >
               <span

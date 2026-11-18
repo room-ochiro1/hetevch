@@ -68,6 +68,11 @@ export function formatShortDate(iso: string): string {
   return `${date.getMonth() + 1}-р сарын ${date.getDate()}`;
 }
 
+/** "2026.10.19": the compact form Mongolian bank statements use. */
+export function formatNumericDate(iso: string): string {
+  return iso.slice(0, 10).replaceAll('-', '.');
+}
+
 /** "2026 оны 10-р сарын 19" */
 export function formatLongDate(iso: string): string {
   return `${fromISODate(iso).getFullYear()} оны ${formatShortDate(iso)}`;

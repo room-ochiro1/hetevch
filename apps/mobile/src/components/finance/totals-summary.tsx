@@ -7,14 +7,27 @@ import { Spacing, type ThemeColor } from '@/constants/theme';
 import { useMoney } from '@/hooks/use-money';
 import { useTheme } from '@/hooks/use-theme';
 
-/** Income · Expense · Net for a period, side by side. Shows dashes until loaded. */
-export function TotalsSummary({ totals }: { totals: Totals | null }) {
+type TotalsSummaryProps = {
+  totals: Totals | null;
+  /** Net tögrög moved into savings in the period (negative if more came out). */
+  saved?: number | null;
+};
+
+/**
+ * Income · Expense · [Savings] · Net for a period, side by side; dashes until loaded. Savings
+ * get a column only when money moved; the net then is what is left in hand, like the balance.
+ */
+export function TotalsSummary({ totals, saved = null }: TotalsSummaryProps) {
   const theme = useTheme();
   const money = useMoney();
+  const moved = saved ?? 0;
   const columns: { label: string; value: string; tone: ThemeColor }[] = [
     { label: 'Орлого', value: totals ? `+${money.format(totals.income)}` : '—', tone: 'income' },
     { label: 'Зарлага', value: totals ? `−${money.format(totals.expense)}` : '—', tone: 'expense' },
-    { label: 'Зөрүү', value: totals ? money.net(totals.net) : '—', tone: 'text' },
+    ...(moved !== 0
+      ? [{ label: 'Хадгаламж', value: money.net(-moved), tone: 'text' as const }]
+      : []),
+    { label: 'Зөрүү', value: totals ? money.net(totals.net - moved) : '—', tone: 'text' },
   ];
 
   return (

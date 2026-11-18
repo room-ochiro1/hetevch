@@ -14,7 +14,7 @@ export function EntryHistory({ card }: { card: SavingsCard }) {
   const opening = Number(card.principal);
 
   function confirmDelete(entry: SavingsEntry) {
-    Alert.alert('Энэ бичлэгийг устгах уу?', 'Картын үлдэгдэл үүнийг тооцохгүй болно.', [
+    Alert.alert('Энэ бичлэгийг устгах уу?', 'Картын болон таны үлдэгдэл үүнийг тооцохгүй болно.', [
       { text: 'Болих', style: 'cancel' },
       {
         text: 'Устгах',

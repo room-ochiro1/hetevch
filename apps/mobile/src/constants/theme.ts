@@ -1,5 +1,5 @@
 /**
- * Hetevch palette (light + dark). A calm white canvas with soft borderless cards: one primary
+ * Hetevch palette (light only). A calm white canvas with soft borderless cards: one primary
  * (indigo), cool neutrals, three pastel card tints (mint, peach, lavender) each with an "ink"
  * for icons/charts on it, and semantic income = green, expense = red. Text pairs meet WCAG AA.
  */
@@ -33,37 +33,13 @@ export const Colors = {
     lavender: '#ECEAFB',
     lavenderInk: '#5B4FC4',
   },
-  dark: {
-    text: '#F1F3F9',
-    textSecondary: '#9AA3B8',
-    background: '#0B0D14',
-    surface: '#161925',
-    backgroundElement: '#1D2130',
-    backgroundSelected: '#2A2F42',
-    border: '#262B3A',
-    accent: '#5B54E8',
-    accentText: '#A5B4FC',
-    accentSoft: '#1F1D45',
-    onAccent: '#FFFFFF',
-    income: '#3DD68C',
-    incomeSoft: '#10291D',
-    expense: '#FF7A73',
-    expenseSoft: '#2F1715',
-    danger: '#FF7A73',
-    mint: '#122723',
-    mintInk: '#7CD3C4',
-    peach: '#2A1E17',
-    peachInk: '#F2A877',
-    lavender: '#1E1C38',
-    lavenderInk: '#B3AAF5',
-  },
 } as const;
 
 /** Pastel card tints and the ink color used for icons and charts on each. */
 export type CardTone = 'mint' | 'peach' | 'lavender';
 export const TONE_INK = { mint: 'mintInk', peach: 'peachInk', lavender: 'lavenderInk' } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColor = keyof typeof Colors.light;
 export type Palette = { [K in ThemeColor]: string };
 
 export const Fonts = Platform.select({

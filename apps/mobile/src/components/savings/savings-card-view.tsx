@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { ON_CARD, ON_CARD_SOFT, cardColor } from '@/constants/savings-appearance';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type SavingsCardViewProps = {
   name: string;
@@ -21,16 +20,10 @@ type SavingsCardViewProps = {
 /** A savings card drawn like a bank card in the colour the user picked. */
 export function SavingsCardView(props: SavingsCardViewProps) {
   const { name, icon, color, caption, balanceText, footnote, goal, onPress } = props;
-  const dark = useColorScheme() === 'dark';
 
   const body = (
     <View
-      style={[
-        styles.card,
-        { backgroundColor: cardColor(color) },
-        // A hairline keeps darker colours apart from the dark background.
-        dark && styles.outlined,
-      ]}>
+      style={[styles.card, { backgroundColor: cardColor(color) }]}>
       <View style={[styles.circle, styles.circleBig]} />
       <View style={[styles.circle, styles.circleSmall]} />
 
@@ -93,7 +86,6 @@ const styles = StyleSheet.create({
     minHeight: 180,
     overflow: 'hidden',
   },
-  outlined: { borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.18)' },
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   circle: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.08)' },
   circleBig: { width: 220, height: 220, top: -90, right: -70 },

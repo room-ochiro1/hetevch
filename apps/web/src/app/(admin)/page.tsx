@@ -8,9 +8,14 @@ import { KpiRow, KpiRowSkeleton } from '@/components/dashboard/kpi-row';
 import { RangeTabs } from '@/components/dashboard/range-tabs';
 import { RecentSignups } from '@/components/dashboard/recent-signups';
 import { TopUsersPanel } from '@/components/dashboard/top-users-panel';
+import { DetailHost } from '@/components/detail/detail-host';
+import { AgeFilter, BandNotice } from '@/components/filters/age-filter';
+import { SexFilter } from '@/components/filters/sex-filter';
 import { PageHeader } from '@/components/ui/page-header';
-import { RANGE_LABELS, parseRange } from '@/lib/range';
-import { getParam } from '@/lib/search-params';
+import { AGE_BAND_LABELS } from '@/lib/age-bands';
+import { parseDetail, parseFilters } from '@/lib/filters';
+import { RANGE_LABELS } from '@/lib/range';
+import { SEX_LABELS } from '@/lib/sex';
 
 function Skeleton({ className }: { className: string }) {
   return <div aria-hidden className={`animate-pulse rounded-2xl bg-surface-2 ${className}`} />;
@@ -30,44 +35,52 @@ function PairSkeleton({ height }: { height: string }) {
  * in independently; switching the period keeps the current charts until the new ones arrive.
  */
 export default async function DashboardPage({ searchParams }: PageProps<'/'>) {
-  const days = parseRange(getParam(await searchParams, 'range'));
+  const params = await searchParams;
+  const filters = parseFilters(params);
+  const { days, band } = filters;
+  const ctx = { basePath: '/', filters };
 
   return (
     <>
       <PageHeader
         title="Хянах самбар"
-        description={`Хэтэвч аппын төлөв · сүүлийн ${RANGE_LABELS[days]}`}
-        actions={<RangeTabs active={days} />}
+        description={`Хэтэвч аппын төлөв · сүүлийн ${RANGE_LABELS[days]} · ${band ? AGE_BAND_LABELS[band] : 'бүх нас'} · ${filters.sex ? SEX_LABELS[filters.sex] : 'бүх хүйс'} · дурын тоо, багана дээр дарж задална`}
+        actions={<RangeTabs filters={filters} />}
       />
+      <AgeFilter filters={filters} basePath="/" />
+      <SexFilter filters={filters} basePath="/" />
+      <BandNotice filters={filters} basePath="/" />
 
       <Suspense fallback={<KpiRowSkeleton />}>
-        <KpiRow days={days} />
+        <KpiRow filters={filters} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-[420px]" />}>
-        <CashflowPanel days={days} />
+        <CashflowPanel filters={filters} />
       </Suspense>
 
       <Suspense fallback={<PairSkeleton height="h-80" />}>
-        <EngagementPanels days={days} />
+        <EngagementPanels filters={filters} />
       </Suspense>
 
       <Suspense fallback={<PairSkeleton height="h-96" />}>
-        <CategoryPanels days={days} />
+        <CategoryPanels filters={filters} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-80" />}>
-        <HeatmapPanel days={days} />
+        <HeatmapPanel filters={filters} />
       </Suspense>
 
       <div className="grid items-start gap-4 xl:grid-cols-[1.4fr_1fr]">
         <Suspense fallback={<Skeleton className="h-96" />}>
-          <TopUsersPanel days={days} />
+          <TopUsersPanel filters={filters} />
         </Suspense>
         <Suspense fallback={<Skeleton className="h-96" />}>
           <RecentSignups />
         </Suspense>
       </div>
+
+      <DetailHost detail={parseDetail(params)} ctx={ctx} />
     </>
   );
 }

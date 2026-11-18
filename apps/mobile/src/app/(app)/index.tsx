@@ -1,9 +1,7 @@
 import { formatAmount, parseAmount } from '@hetevch/shared';
-import { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppDrawer } from '@/components/drawer/app-drawer';
 import { openNewTransaction } from '@/components/finance/kind-options';
 import { AmountDisplay } from '@/components/home/amount-display';
 import { HomeActions } from '@/components/home/home-actions';
@@ -16,13 +14,12 @@ import { useMoney } from '@/hooks/use-money';
 
 /**
  * Home is a number pad: type how much, then say what it was (Зарлага / Орлого). The sheet that
- * opens only asks for the category, so logging takes a few taps. The avatar opens the side menu.
+ * opens only asks for the category, so logging takes a few taps. The avatar opens Profile.
  */
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const money = useMoney();
-  const pad = useAmountPad(money.currency === 'USD');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pad = useAmountPad(money.hasDecimals);
   const typed = parseAmount(pad.text);
 
   const hint = pad.isEmpty
@@ -46,18 +43,17 @@ export default function HomeScreen() {
             // iOS draws the tab bar over the screen; Android lays the screen out above it.
             { paddingBottom: Platform.OS === 'ios' ? BottomTabInset + insets.bottom : Spacing.three },
           ]}>
-          <HomeTopBar onOpenMenu={() => setMenuOpen(true)} />
+          <HomeTopBar />
           <View style={styles.display}>
             <AmountDisplay text={pad.text} symbol={money.symbol} hint={hint} />
           </View>
-          <Keypad onKey={pad.press} onClear={pad.clear} decimal={money.currency === 'USD'} />
+          <Keypad onKey={pad.press} onClear={pad.clear} decimal={money.hasDecimals} />
           <HomeActions
             onExpense={() => use((amount) => openNewTransaction({ kind: 'expense', amount }))}
             onIncome={() => use((amount) => openNewTransaction({ kind: 'income', amount }))}
           />
         </View>
       </SafeAreaView>
-      <AppDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
     </ThemedView>
   );
 }

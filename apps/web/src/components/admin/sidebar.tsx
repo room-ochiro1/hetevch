@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { Brand } from '@/components/admin/brand';
 import { NavLinks } from '@/components/admin/nav-links';
 import { SignOutButton } from '@/components/admin/sign-out-button';
-import { ThemeToggle } from '@/components/admin/theme-toggle';
 import { requireAdmin } from '@/lib/dal/auth';
 
 async function CurrentAdmin() {
@@ -37,7 +36,6 @@ export function Sidebar() {
         <Brand />
         <NavLinks />
         <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4">
-          <ThemeToggle />
           <Suspense fallback={<div className="h-8 animate-pulse rounded-lg bg-surface-2" />}>
             <CurrentAdmin />
           </Suspense>
@@ -54,10 +52,7 @@ export function MobileHeader() {
     <header className="sticky top-0 z-30 flex flex-col gap-3 border-b border-border bg-surface p-4 md:hidden">
       <div className="flex items-center justify-between gap-3">
         <Brand />
-        <div className="flex items-center gap-2">
-          <ThemeToggle className="w-28" />
-          <SignOutButton compact />
-        </div>
+        <SignOutButton compact />
       </div>
       <NavLinks orientation="horizontal" />
     </header>

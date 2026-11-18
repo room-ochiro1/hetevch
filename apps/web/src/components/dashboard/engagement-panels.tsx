@@ -3,14 +3,15 @@ import { DailyBarChart } from '@/components/dashboard/daily-bar-chart';
 import { Panel } from '@/components/ui/panel';
 import { getDashboard } from '@/lib/dal/analytics';
 import { formatCount } from '@/lib/format';
-import type { RangeDays } from '@/lib/range';
+import type { Filters } from '@/lib/filters';
 
 /**
  * Daily active users and daily signups: different measures, so two charts side by side
  * rather than one chart with two axes.
  */
-export async function EngagementPanels({ days }: { days: RangeDays }) {
-  const { daily, current } = await getDashboard(days);
+export async function EngagementPanels({ filters }: { filters: Filters }) {
+  const { days, band, sex } = filters;
+  const { daily, current } = await getDashboard(days, band, sex);
   const peak = daily.reduce((best, d) => (d.activeUsers > best.activeUsers ? d : best), daily[0]);
 
   return (
@@ -37,6 +38,7 @@ export async function EngagementPanels({ days }: { days: RangeDays }) {
           label="Шинэ хэрэглэгч"
           unit="count"
           data={daily.map((d) => ({ day: d.day, value: d.newUsers }))}
+          link={{ basePath: '/', filters }}
         />
       </Panel>
     </div>

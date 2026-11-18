@@ -6,6 +6,7 @@ import {
   roundAmount,
   type ByCurrency,
   type Currency,
+  type DisplayCurrency,
   type TransactionKind,
 } from '@hetevch/shared';
 
@@ -13,31 +14,31 @@ import { useCurrency } from '@/providers/currency';
 
 /**
  * Formats money in the currency the user chose to see. Amounts are tögrög unless `from` says
- * otherwise (a dollar savings card); they are converted at the day's rate. Tögrög shows whole
- * numbers, dollars show cents.
+ * otherwise (a dollar savings card); they are converted at the day's rates. Each currency
+ * shows its own decimals (tögrög, yen and won whole; the others cents).
  */
 export function useMoney() {
-  const { currency, rate } = useCurrency();
-  const usdRate = rate?.value ?? null;
+  const { currency, rates } = useCurrency();
+  const perUsd = rates?.perUsd ?? null;
 
   /** `amount` (held in `from`) in the display currency, or null when no rate is known. */
-  function convert(amount: number, from: Currency = BASE_CURRENCY): number | null {
+  function convert(amount: number, from: DisplayCurrency = BASE_CURRENCY): number | null {
     if (from === currency) return amount;
-    return usdRate ? convertAmount(amount, from, currency, usdRate) : null;
+    return perUsd ? convertAmount(amount, from, currency, perUsd) : null;
   }
 
-  function show(amount: number, inCurrency: Currency): string {
-    return formatAmount(inCurrency === 'MNT' ? Math.round(amount) : amount, inCurrency);
+  function show(amount: number, inCurrency: DisplayCurrency): string {
+    return formatAmount(CURRENCY_INFO[inCurrency].decimals === 0 ? Math.round(amount) : amount, inCurrency);
   }
 
   /** Converted when possible; otherwise shown in its own currency rather than mislabelled. */
-  function format(amount: number, from: Currency = BASE_CURRENCY): string {
+  function format(amount: number, from: DisplayCurrency = BASE_CURRENCY): string {
     const converted = convert(amount, from);
     return converted === null ? show(amount, from) : show(converted, currency);
   }
 
   /** "+12,500 ₮" / "−12,500 ₮" (true minus sign) for a value that may be negative. */
-  function net(value: number, from?: Currency): string {
+  function net(value: number, from?: DisplayCurrency): string {
     return `${value >= 0 ? '+' : '−'}${format(Math.abs(value), from)}`;
   }
 
@@ -60,14 +61,16 @@ export function useMoney() {
 
   /** A typed amount in the display currency → tögrög to store (2 decimals). */
   function toBase(amount: number): number {
-    if (currency === BASE_CURRENCY || !usdRate) return amount;
-    return roundAmount(convertAmount(amount, currency, BASE_CURRENCY, usdRate));
+    if (currency === BASE_CURRENCY || !perUsd) return amount;
+    return roundAmount(convertAmount(amount, currency, BASE_CURRENCY, perUsd));
   }
 
   return {
     currency,
     symbol: CURRENCY_INFO[currency].symbol,
-    rate,
+    /** Whether amounts in the display currency have cents (for keypads). */
+    hasDecimals: CURRENCY_INFO[currency].decimals > 0,
+    rates,
     convert,
     format,
     net,

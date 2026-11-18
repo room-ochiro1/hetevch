@@ -1,15 +1,21 @@
+import type { Gender } from '@hetevch/shared';
+
 import { supabase } from '@/lib/supabase';
 
 /** Each action returns a Mongolian error message, or null when it worked. */
 
-/** Saves the name and birth year (the only profile fields users may change). */
+/** Saves the name, birth year and gender (the only profile fields users may change). */
 export async function updateProfile(
   userId: string,
-  fields: { fullName: string; birthYear: number | null },
+  fields: { fullName: string; birthYear: number | null; gender: Gender | null },
 ): Promise<string | null> {
   const { error } = await supabase
     .from('profiles')
-    .update({ full_name: fields.fullName.trim() || null, birth_year: fields.birthYear })
+    .update({
+      full_name: fields.fullName.trim() || null,
+      birth_year: fields.birthYear,
+      gender: fields.gender,
+    })
     .eq('id', userId);
   return error ? 'Хадгалж чадсангүй. Интернэт холболтоо шалгаад дахин оролдоно уу.' : null;
 }

@@ -10,8 +10,10 @@ Deploying is outward-facing: confirm with the user before every push, deploy, bu
 ## 1. Supabase (hosted)
 
 1. User creates a project at supabase.com and gives you the project ref.
-2. `pnpm exec supabase login` (user runs it — it opens a browser), then `pnpm exec supabase link --project-ref <ref>`.
-3. `pnpm exec supabase db push` applies `supabase/migrations/*`.
+2. `npx supabase login` (user runs it — it opens a browser), then `npx supabase link --project-ref <ref>`.
+3. `pnpm db:deploy` applies `supabase/migrations/*` safely (check → backup → dry run → apply → verify → types).
+   Database migrations are the one deploy the owner asked to be automatic (2026-11-18): run it without asking,
+   as long as the guard accepts the migration. Never use `supabase db push` directly.
 4. Make the owner an admin (SQL editor in the Supabase dashboard):
    ```sql
    update public.profiles set role = 'admin'
