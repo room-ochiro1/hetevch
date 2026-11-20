@@ -49,7 +49,7 @@ export function DetailDialog({ label, closeHref, children }: DetailDialogProps) 
       onClick={(event) => {
         if (event.target === event.currentTarget) close();
       }}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(60rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-background p-0 text-foreground shadow-2xl backdrop:bg-black/55 backdrop:backdrop-blur-[2px]"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(64rem,calc(100vw-2rem))] overflow-hidden rounded-[28px] bg-background p-0 text-foreground shadow-pop backdrop:bg-ink/45 backdrop:backdrop-blur-[2px]"
     >
       <div className="relative flex max-h-[calc(100dvh-2rem)] flex-col">
         <button
@@ -57,11 +57,11 @@ export function DetailDialog({ label, closeHref, children }: DetailDialogProps) 
           onClick={close}
           aria-label="Хаах"
           title="Хаах (Esc)"
-          className="absolute top-3 right-3 z-10 grid size-9 place-items-center rounded-full border border-border bg-surface text-muted hover:text-foreground"
+          className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-xl bg-surface text-muted shadow-card hover:text-foreground"
         >
           <XIcon className="size-4" />
         </button>
-        <div className="overflow-y-auto overscroll-contain p-5 sm:p-6">{children}</div>
+        <div className="overflow-y-auto overscroll-contain p-5 sm:p-7">{children}</div>
       </div>
     </dialog>
   );

@@ -57,7 +57,7 @@ export default async function UserDetailPage({ params, searchParams }: PageProps
           <Pagination basePath={`/users/${id}`} page={page} total={transactions.total} />
         </Panel>
         <Panel title="Эрх">
-          <RoleForm userId={user.id} role={user.role} isSelf={user.isSelf} />
+          <RoleForm userId={user.id} name={userName(user)} role={user.role} isSelf={user.isSelf} />
         </Panel>
       </div>
     </>

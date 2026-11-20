@@ -16,6 +16,8 @@ export type AdminTransaction = {
   amount: number;
   note: string | null;
   occurredOn: string;
+  /** When it was entered in the app (timestamptz). */
+  createdAt: string;
   category: { name: string; icon: string } | null;
   user: { id: string; label: string } | null;
 };
@@ -26,6 +28,7 @@ type Row = {
   amount: number;
   note: string | null;
   occurred_on: string;
+  created_at: string;
   category: { name: string; icon: string } | null;
   user: { id: string; email: string | null; full_name: string | null } | null;
 };
@@ -37,6 +40,7 @@ function toAdminTransaction(row: Row): AdminTransaction {
     amount: Number(row.amount),
     note: row.note,
     occurredOn: row.occurred_on,
+    createdAt: row.created_at,
     category: row.category,
     user: row.user
       ? { id: row.user.id, label: row.user.full_name ?? row.user.email ?? row.user.id }

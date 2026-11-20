@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 
-import { RangeTabs } from '@/components/dashboard/range-tabs';
 import { AgePanel } from '@/components/research/age-panel';
 import { GenderPanel } from '@/components/research/gender-panel';
 import { ResearchKpis, ResearchKpisSkeleton } from '@/components/research/research-kpis';
@@ -9,8 +8,7 @@ import { SavingsPanels } from '@/components/research/savings-panels';
 import { SpendingPanel } from '@/components/research/spending-panel';
 import { WeekdayPanels } from '@/components/research/weekday-panels';
 import { DetailHost } from '@/components/detail/detail-host';
-import { AgeFilter, BandNotice } from '@/components/filters/age-filter';
-import { SexFilter } from '@/components/filters/sex-filter';
+import { FilterBar } from '@/components/filters/filter-bar';
 import { PageHeader } from '@/components/ui/page-header';
 import { AGE_BAND_LABELS } from '@/lib/age-bands';
 import { parseDetail, parseFilters } from '@/lib/filters';
@@ -18,7 +16,7 @@ import { RANGE_LABELS } from '@/lib/range';
 import { SEX_LABELS } from '@/lib/sex';
 
 function Skeleton({ className }: { className: string }) {
-  return <div aria-hidden className={`animate-pulse rounded-2xl bg-surface-2 ${className}`} />;
+  return <div aria-hidden className={`animate-pulse rounded-3xl bg-surface-2 ${className}`} />;
 }
 
 /**
@@ -37,11 +35,8 @@ export default async function ResearchPage({ searchParams }: PageProps<'/researc
       <PageHeader
         title="Судалгаа"
         description={`Насны бүлэг, зарцуулалт, хадгаламж · сүүлийн ${RANGE_LABELS[days]} · ${band ? AGE_BAND_LABELS[band] : 'бүх нас'} · ${filters.sex ? SEX_LABELS[filters.sex] : 'бүх хүйс'} · зөвхөн хэрэглэгчид (админ ороогүй)`}
-        actions={<RangeTabs filters={filters} basePath="/research" />}
       />
-      <AgeFilter filters={filters} basePath="/research" />
-      <SexFilter filters={filters} basePath="/research" />
-      <BandNotice filters={filters} basePath="/research" />
+      <FilterBar filters={filters} basePath="/research" />
 
       <Suspense fallback={<ResearchKpisSkeleton />}>
         <ResearchKpis filters={filters} />

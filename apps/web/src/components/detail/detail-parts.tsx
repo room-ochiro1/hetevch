@@ -18,12 +18,12 @@ export function DetailHeader({ icon, title, subtitle, children }: {
   return (
     <header className="flex flex-col gap-3 pr-12">
       <div className="flex items-center gap-3">
-        <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface-2 text-2xl">
+        <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-surface text-2xl shadow-card">
           {icon}
         </span>
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold">{title}</h2>
-          <p className="text-xs text-muted">{subtitle}</p>
+          <h2 className="truncate text-xl font-semibold tracking-tight">{title}</h2>
+          <p className="mt-0.5 text-sm text-muted">{subtitle}</p>
         </div>
       </div>
       {children}
@@ -38,7 +38,7 @@ export function Stats({ items }: { items: Stat[] }) {
   return (
     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
       {items.map((item) => (
-        <div key={item.label} className="rounded-xl border border-border bg-surface px-3.5 py-3">
+        <div key={item.label} className="rounded-2xl bg-surface px-4 py-3.5 shadow-card">
           <dt className="text-xs text-muted">{item.label}</dt>
           <dd
             className={`mt-0.5 truncate text-lg font-semibold tabular-nums ${
@@ -61,7 +61,7 @@ export function Section({ title, hint, children, action }: {
   action?: ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+    <section className="flex flex-col gap-3 rounded-3xl bg-surface p-5 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold">{title}</h3>
@@ -101,7 +101,7 @@ export function BarList({ rows, barClass = 'bg-chart-1', empty }: { rows: BarRow
               </span>
               <span className="shrink-0 font-semibold tabular-nums">{row.text}</span>
             </span>
-            <span className="block h-1.5 rounded-full bg-surface-2">
+            <span className="block h-2 rounded-full bg-surface-2">
               <span
                 className={`block h-full rounded-full ${barClass}`}
                 style={{ width: `${row.value > 0 ? Math.max(2, (row.value / max) * 100) : 0}%` }}
@@ -130,14 +130,14 @@ export function BarList({ rows, barClass = 'bg-chart-1', empty }: { rows: BarRow
 export function DetailSkeleton() {
   return (
     <div aria-busy className="flex flex-col gap-4" aria-label="Ачаалж байна">
-      <div className="h-11 w-64 animate-pulse rounded-xl bg-surface-2" />
+      <div className="h-12 w-64 animate-pulse rounded-2xl bg-surface" />
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl bg-surface-2" />
+          <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface" />
         ))}
       </div>
-      <div className="h-56 animate-pulse rounded-2xl bg-surface-2" />
-      <div className="h-40 animate-pulse rounded-2xl bg-surface-2" />
+      <div className="h-56 animate-pulse rounded-3xl bg-surface" />
+      <div className="h-40 animate-pulse rounded-3xl bg-surface" />
     </div>
   );
 }

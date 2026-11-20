@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 export type IconProps = { className?: string };
 export type IconComponent = (props: IconProps) => ReactNode;
 
-function createIcon(name: string, paths: ReactNode): IconComponent {
+export function createIcon(name: string, paths: ReactNode): IconComponent {
   function Icon({ className = 'size-4' }: IconProps) {
     return (
       <svg

@@ -1,15 +1,23 @@
 @import "tailwindcss";
 
 /* Hetevch palette, light only — matches apps/mobile/src/constants/theme.ts (indigo + slate,
-   green/red money). --chart-1 is validated for marks on --surface (dataviz palette checks). */
+   green/red money). --chart-1 is validated for marks on --surface (dataviz palette checks).
+   Layout: the app frame (--background) sits on a darker --canvas; content lives in white
+   cards (--surface) with a soft shadow; primary actions and the active nav item are --ink. */
 :root {
   color-scheme: light;
-  --background: #f5f6fa;
-  --foreground: #0f172a;
+  --canvas: #e4e6ec;
+  --background: #f3f4f7;
+  --foreground: #0f1222;
   --surface: #ffffff;
-  --surface-2: #eceef4;
-  --muted: #5b6478;
-  --border: #e2e5ed;
+  --surface-2: #eff1f5;
+  --muted: #5b6275;
+  --border: #e6e8ee;
+  --ink: #14161f;
+  --on-ink: #ffffff;
+  /* "Waiting / needs a look" (amber), text on --warn-soft passes AA. */
+  --warn: #a8460a;
+  --warn-soft: #fff3e3;
   --accent: #4f46e5;
   --accent-text: #4338ca;
   --accent-soft: #ecebff;
@@ -30,6 +38,13 @@
 }
 
 @theme inline {
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px -12px rgb(16 24 40 / 0.14);
+  --shadow-pop: 0 24px 64px -16px rgb(16 24 40 / 0.35);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);

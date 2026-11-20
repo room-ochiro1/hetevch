@@ -1,24 +1,23 @@
 import { Suspense } from 'react';
 
+import { AttentionPanel } from '@/components/dashboard/attention-panel';
+import { BandDriftPanel } from '@/components/dashboard/band-drift-panel';
 import { CashflowPanel } from '@/components/dashboard/cashflow-panel';
-import { CategoryPanels } from '@/components/dashboard/category-panels';
+import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { EngagementPanels } from '@/components/dashboard/engagement-panels';
 import { HeatmapPanel } from '@/components/dashboard/heatmap-panel';
 import { KpiRow, KpiRowSkeleton } from '@/components/dashboard/kpi-row';
-import { RangeTabs } from '@/components/dashboard/range-tabs';
+import { MoneyFlowPanel } from '@/components/dashboard/money-flow-panel';
 import { RecentSignups } from '@/components/dashboard/recent-signups';
+import { RhythmPanel } from '@/components/dashboard/rhythm-panel';
+import { SpendPanel } from '@/components/dashboard/spend-panel';
 import { TopUsersPanel } from '@/components/dashboard/top-users-panel';
 import { DetailHost } from '@/components/detail/detail-host';
-import { AgeFilter, BandNotice } from '@/components/filters/age-filter';
-import { SexFilter } from '@/components/filters/sex-filter';
-import { PageHeader } from '@/components/ui/page-header';
-import { AGE_BAND_LABELS } from '@/lib/age-bands';
+import { FilterBar } from '@/components/filters/filter-bar';
 import { parseDetail, parseFilters } from '@/lib/filters';
-import { RANGE_LABELS } from '@/lib/range';
-import { SEX_LABELS } from '@/lib/sex';
 
 function Skeleton({ className }: { className: string }) {
-  return <div aria-hidden className={`animate-pulse rounded-2xl bg-surface-2 ${className}`} />;
+  return <div aria-hidden className={`animate-pulse rounded-3xl bg-surface-2 ${className}`} />;
 }
 
 function PairSkeleton({ height }: { height: string }) {
@@ -31,29 +30,44 @@ function PairSkeleton({ height }: { height: string }) {
 }
 
 /**
- * One period filter at the top scopes every section, so all numbers agree. Sections stream
- * in independently; switching the period keeps the current charts until the new ones arrive.
+ * The filters at the top scope every section, so all numbers agree. Top to bottom: headline
+ * numbers → when people use the app and what needs a look → where the money goes → trends.
+ * Any number, bar or row opens a detail dialog; sections stream in on their own.
  */
 export default async function DashboardPage({ searchParams }: PageProps<'/'>) {
   const params = await searchParams;
   const filters = parseFilters(params);
-  const { days, band } = filters;
   const ctx = { basePath: '/', filters };
 
   return (
     <>
-      <PageHeader
-        title="Хянах самбар"
-        description={`Хэтэвч аппын төлөв · сүүлийн ${RANGE_LABELS[days]} · ${band ? AGE_BAND_LABELS[band] : 'бүх нас'} · ${filters.sex ? SEX_LABELS[filters.sex] : 'бүх хүйс'} · дурын тоо, багана дээр дарж задална`}
-        actions={<RangeTabs filters={filters} />}
-      />
-      <AgeFilter filters={filters} basePath="/" />
-      <SexFilter filters={filters} basePath="/" />
-      <BandNotice filters={filters} basePath="/" />
+      <DashboardHeader filters={filters} />
+      <FilterBar filters={filters} basePath="/" />
 
       <Suspense fallback={<KpiRowSkeleton />}>
         <KpiRow filters={filters} />
       </Suspense>
+
+      <div className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+        <Suspense fallback={<Skeleton className="h-[520px]" />}>
+          <RhythmPanel filters={filters} />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-[520px]" />}>
+          <AttentionPanel filters={filters} />
+        </Suspense>
+      </div>
+
+      <div className="grid items-stretch gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <Suspense fallback={<Skeleton className="h-96" />}>
+          <BandDriftPanel filters={filters} />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-96" />}>
+          <SpendPanel filters={filters} />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-96 lg:col-span-2 xl:col-span-1" />}>
+          <MoneyFlowPanel filters={filters} />
+        </Suspense>
+      </div>
 
       <Suspense fallback={<Skeleton className="h-[420px]" />}>
         <CashflowPanel filters={filters} />
@@ -61,10 +75,6 @@ export default async function DashboardPage({ searchParams }: PageProps<'/'>) {
 
       <Suspense fallback={<PairSkeleton height="h-80" />}>
         <EngagementPanels filters={filters} />
-      </Suspense>
-
-      <Suspense fallback={<PairSkeleton height="h-96" />}>
-        <CategoryPanels filters={filters} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-80" />}>

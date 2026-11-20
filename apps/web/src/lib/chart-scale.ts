@@ -25,6 +25,11 @@ export function formatTick(value: number): string {
   return `${sign}${trim(abs / 1_000_000_000)} тэрбум`;
 }
 
+/** Short money for chart labels and legends: "850 мян ₮", "1.2 сая ₮" (exact amounts elsewhere). */
+export function formatCompactMoney(value: number): string {
+  return `${formatTick(value)} ₮`;
+}
+
 /** Change from `previous` to `current` as a ratio (0.12 = +12%); null when there's no base. */
 export function changeRatio(current: number, previous: number): number | null {
   if (previous === 0) return current === 0 ? 0 : null;

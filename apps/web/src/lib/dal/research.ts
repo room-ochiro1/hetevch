@@ -6,6 +6,7 @@ import { cache } from 'react';
 import { toAgeBand, type AgeBand } from '@/lib/age-bands';
 import type { Sex } from '@/lib/sex';
 import { requireAdmin } from '@/lib/dal/auth';
+import { toBandRow } from '@/lib/dal/band-rows';
 import { type RangeDays, todayInUlaanbaatar } from '@/lib/range';
 import { createClient } from '@/lib/supabase/server';
 
@@ -99,16 +100,7 @@ export const getResearch = cache(async (
   }
 
   const keep = <T extends { band: AgeBand }>(rows: T[]) => (band ? rows.filter((r) => r.band === band) : rows);
-  const allBands = bands.data.map((r) => ({
-      band: toAgeBand(r.band),
-      users: Number(r.users),
-      activeUsers: Number(r.active_users),
-      income: Number(r.income),
-      expense: Number(r.expense),
-      savers: Number(r.savers),
-      savedMnt: Number(r.saved_mnt),
-      savedUsd: Number(r.saved_usd),
-  }));
+  const allBands = bands.data.map(toBandRow);
 
   return {
     days,

@@ -1,4 +1,4 @@
-import { Chip } from '@/components/filters/age-filter';
+import { Chip, FilterLabel } from '@/components/filters/age-filter';
 import { filterHref, type Filters } from '@/lib/filters';
 import { SEXES, SEX_LABELS, type Sex } from '@/lib/sex';
 
@@ -11,8 +11,8 @@ export function SexFilter({ filters, basePath }: { filters: Filters; basePath: s
 
   return (
     <nav aria-label="Хүйсээр шүүх" className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 text-xs font-medium text-muted">Хүйс:</span>
-      <Chip href={link(null)} selected={filters.sex === null} label="Бүх хүйс" />
+      <FilterLabel>Хүйс</FilterLabel>
+      <Chip href={link(null)} selected={filters.sex === null} label="Бүгд" />
       {SEXES.map((sex) => (
         <Chip key={sex} href={link(sex)} selected={filters.sex === sex} label={SEX_LABELS[sex]} />
       ))}

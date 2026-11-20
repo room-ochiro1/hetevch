@@ -64,7 +64,7 @@ export function DailyBarChart({ label, data, unit, link }: DailyBarChartProps) {
         </div>
         {activePoint ? (
           <div
-            className={`pointer-events-none absolute top-0 z-10 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs shadow-md ${align}`}
+            className={`pointer-events-none absolute top-0 z-10 rounded-xl bg-surface px-2.5 py-1.5 text-xs shadow-pop ring-1 ring-border ${align}`}
             style={{ left: `${position * 100}%` }}
           >
             <p className="text-muted">{formatShortDay(activePoint.day)}</p>

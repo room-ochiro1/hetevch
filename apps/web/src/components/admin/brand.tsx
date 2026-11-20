@@ -1,15 +1,20 @@
+import Link from 'next/link';
+
 import { WalletIcon } from '@/components/ui/icons';
 
-export function Brand() {
+/** The app mark: an ink tile. `compact` drops the name (the desktop rail). */
+export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-3">
-      <span className="grid size-9 place-items-center rounded-xl bg-accent text-on-accent">
-        <WalletIcon className="size-5"/>
+    <Link href="/" title="Хэтэвч — Хянах самбар" className="flex items-center gap-3">
+      <span className="grid size-11 place-items-center rounded-2xl bg-ink text-on-ink shadow-card">
+        <WalletIcon className="size-5" />
       </span>
-      <div className="leading-tight">
-        <p className="font-semibold">Хэтэвч</p>
-        <p className="text-xs text-muted">Админ самбар</p>
-      </div>
-    </div>
+      {compact ? null : (
+        <span className="leading-tight">
+          <span className="block font-semibold">Хэтэвч</span>
+          <span className="block text-xs text-muted">Админ самбар</span>
+        </span>
+      )}
+    </Link>
   );
 }

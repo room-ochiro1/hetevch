@@ -24,7 +24,7 @@ export function ChartTooltip({ position, children }: { position: number; childre
 
   return (
     <div
-      className={`pointer-events-none absolute -top-2 z-20 min-w-40 -translate-y-full rounded-xl border border-border bg-surface px-3 py-2 text-xs shadow-lg ${align}`}
+      className={`pointer-events-none absolute -top-2 z-20 min-w-40 -translate-y-full rounded-2xl bg-surface px-3 py-2 text-xs shadow-pop ring-1 ring-border ${align}`}
       style={{ left: `${position * 100}%` }}
     >
       {children}

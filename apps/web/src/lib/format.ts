@@ -32,6 +32,13 @@ export function formatDateTime(timestamp: string): string {
   return `${formatLongDate(localDay.format(date))}, ${localTime.format(date)}`;
 }
 
+/** "08:18" for a timestamp on `today` (Ulaanbaatar), otherwise "11-р сарын 17". */
+export function formatWhen(timestamp: string, today: string): string {
+  const date = new Date(timestamp);
+  const day = localDay.format(date);
+  return day === today ? localTime.format(date) : formatShortDate(day);
+}
+
 export function formatCount(value: number): string {
   return numberFormat.format(value);
 }

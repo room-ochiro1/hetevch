@@ -43,6 +43,7 @@ export function CategoryList({ categories }: { categories: AdminCategory[] }) {
                 <DeleteCategoryButton
                   id={category.id}
                   name={category.name}
+                  icon={category.icon}
                   inUse={category.txCount > 0}
                 />
               </div>

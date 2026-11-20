@@ -1,6 +1,7 @@
 import 'server-only';
 
 import type { TransactionKind } from '@hetevch/shared';
+import { cache } from 'react';
 
 import type { AgeBand } from '@/lib/age-bands';
 import type { Sex } from '@/lib/sex';
@@ -18,12 +19,12 @@ export type CategoryTotal = {
 };
 
 /** Largest categories of one kind in the last `days` days (top 8), optionally for an age band and gender. */
-export async function getTopCategories(
+export const getTopCategories = cache(async (
   kind: TransactionKind = 'expense',
   days = 30,
   band: AgeBand | null = null,
   sex: Sex | null = null,
-): Promise<CategoryTotal[]> {
+): Promise<CategoryTotal[]> => {
   await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('admin_category_totals_by_segment', {
@@ -41,4 +42,4 @@ export async function getTopCategories(
     total: Number(row.total),
     txCount: Number(row.tx_count),
   }));
-}
+});

@@ -10,15 +10,18 @@ export function Chip({ href, selected, label }: { href: string; selected: boolea
       href={href}
       scroll={false}
       aria-current={selected ? 'true' : undefined}
-      className={`rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors ${
-        selected
-          ? 'border-foreground bg-foreground text-background'
-          : 'border-border bg-surface text-muted hover:border-foreground/40 hover:text-foreground'
+      className={`rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+        selected ? 'bg-ink text-on-ink' : 'bg-surface-2 text-muted hover:bg-border hover:text-foreground'
       }`}
     >
       {label}
     </Link>
   );
+}
+
+/** The small caption in front of a chip group ("Нас", "Хүйс"). */
+export function FilterLabel({ children }: { children: string }) {
+  return <span className="mr-0.5 text-xs font-semibold text-foreground">{children}</span>;
 }
 
 /**
@@ -30,8 +33,8 @@ export function AgeFilter({ filters, basePath }: { filters: Filters; basePath: s
 
   return (
     <nav aria-label="Насны бүлгээр шүүх" className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 text-xs font-medium text-muted">Нас:</span>
-      <Chip href={link(null)} selected={filters.band === null} label="Бүх нас" />
+      <FilterLabel>Нас</FilterLabel>
+      <Chip href={link(null)} selected={filters.band === null} label="Бүгд" />
       {AGE_BANDS.map((band) => (
         <Chip key={band} href={link(band)} selected={filters.band === band} label={AGE_BAND_LABELS[band]} />
       ))}
@@ -54,12 +57,14 @@ export function BandNotice({ filters, basePath }: { filters: Filters; basePath: 
     filters.sex ? SEX_PEOPLE[filters.sex] : null,
   ].filter(Boolean);
   return (
-    <p className="rounded-xl border border-chart-1/30 bg-chart-1/10 px-4 py-2.5 text-sm">
-      Зөвхөн <strong>{who.join(', ')}</strong> хэрэглэгчдийн тоо харагдаж байна.{' '}
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-accent-soft px-4 py-2.5 text-sm text-accent-text">
+      <span>
+        Зөвхөн <strong>{who.join(', ')}</strong> хэрэглэгчдийн тоо харагдаж байна.
+      </span>
       <Link
         href={filterHref(basePath, { ...filters, band: null, sex: null })}
         scroll={false}
-        className="font-medium underline"
+        className="font-semibold underline underline-offset-2"
       >
         Бүх хэрэглэгчээр харах
       </Link>

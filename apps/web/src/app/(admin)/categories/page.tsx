@@ -32,7 +32,7 @@ export default async function CategoriesPage() {
           <CategoryForm />
         </Panel>
       </div>
-      <Suspense fallback={<div aria-hidden className="h-64 animate-pulse rounded-2xl bg-surface-2" />}>
+      <Suspense fallback={<div aria-hidden className="h-64 animate-pulse rounded-3xl bg-surface-2" />}>
         <UserCategories />
       </Suspense>
     </>

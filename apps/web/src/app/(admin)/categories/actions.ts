@@ -28,6 +28,37 @@ export async function createCategory(_prev: ActionState, formData: FormData): Pr
   return actionSuccess(`«${name}» ангилал нэмэгдлээ.`);
 }
 
+/**
+ * Adds a category users keep making for themselves to the built-in list (placed last). Their own
+ * copies stay as they are; nothing is moved or deleted.
+ */
+export async function promoteCategory(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const kind = parseKindField(formData);
+  const fields = parseCategoryFields(formData);
+  if (!kind) return actionError('Төрөл буруу байна.');
+  if (!fields.ok) return actionError(fields.error);
+
+  const supabase = await createClient();
+  const { name, icon, color } = fields.data;
+  const { data: builtIn, error: readError } = await supabase
+    .from('categories')
+    .select('name, sort_order')
+    .is('owner_id', null)
+    .eq('kind', kind);
+  if (readError) return actionError(`Шалгаж чадсангүй: ${readError.message}`);
+  if ((builtIn ?? []).some((c) => c.name.trim().toLowerCase() === name.toLowerCase())) {
+    return actionError(`«${name}» нийтийн ангилалд аль хэдийн байна.`);
+  }
+
+  const sortOrder = Math.min(9999, Math.max(0, ...(builtIn ?? []).map((c) => c.sort_order)) + 1);
+  const { error } = await supabase.from('categories').insert({ kind, name, icon, color, sort_order: sortOrder });
+  if (error) return actionError(`Нэмж чадсангүй: ${error.message}`);
+
+  refresh();
+  return actionSuccess('Нийтийн ангилалд нэмэгдлээ');
+}
+
 export async function updateCategory(_prev: ActionState, formData: FormData): Promise<ActionState> {
   await requireAdmin();
   const id = String(formData.get('id') ?? '');

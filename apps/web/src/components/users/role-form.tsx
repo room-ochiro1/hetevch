@@ -1,64 +1,79 @@
-'use client';
-
-import { useActionState } from 'react';
-
-import { changeRole, type RoleFormState } from '@/app/(admin)/users/[id]/actions';
+import { changeRole } from '@/app/(admin)/users/[id]/actions';
+import { Badge } from '@/components/ui/badge';
+import { ConfirmFlow } from '@/components/ui/confirm-flow';
+import { ReviewRow } from '@/components/ui/confirm-parts';
+import { ShieldIcon } from '@/components/ui/icons-more';
 
 type RoleFormProps = {
   userId: string;
+  name: string;
   role: 'user' | 'admin';
   isSelf: boolean;
 };
 
-const initialState: RoleFormState = { error: null, success: null };
+const roleBadge = (role: 'user' | 'admin') =>
+  role === 'admin' ? <Badge tone="accent">Админ</Badge> : <Badge>Хэрэглэгч</Badge>;
 
-export function RoleForm({ userId, role, isSelf }: RoleFormProps) {
-  const [state, formAction, pending] = useActionState(changeRole, initialState);
+/** Grant or remove admin access, through a review → confirm dialog. */
+export function RoleForm({ userId, name, role, isSelf }: RoleFormProps) {
   const isAdmin = role === 'admin';
   const nextRole = isAdmin ? 'user' : 'admin';
-  const confirmText = isAdmin
-    ? 'Энэ хэрэглэгчийн админ эрхийг хасах уу?'
-    : 'Энэ хэрэглэгчид админ эрх өгөх үү? Тэр бүх хэрэглэгчийн мэдээллийг харах боломжтой болно.';
+  const locked = isSelf && isAdmin;
 
   return (
-    <form
-      action={formAction}
-      onSubmit={(event) => {
-        if (!window.confirm(confirmText)) event.preventDefault();
-      }}
-      className="flex flex-col gap-3"
-    >
-      <input type="hidden" name="userId" value={userId} />
-      <input type="hidden" name="role" value={nextRole} />
+    <div className="flex flex-col gap-3">
       <p className="text-sm text-muted">
         {isAdmin
           ? 'Энэ хэрэглэгч админ самбарт нэвтэрч, бүх өгөгдлийг харах эрхтэй.'
           : 'Энгийн хэрэглэгч. Зөвхөн мобайл аппаар өөрийн мэдээллээ хардаг.'}
       </p>
-      <button
-        type="submit"
-        disabled={pending || (isSelf && isAdmin)}
-        className={`rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 ${
+      <ConfirmFlow
+        trigger={{
+          label: isAdmin ? 'Админ эрхийг хасах' : 'Админ болгох',
+          variant: isAdmin ? 'danger' : 'primary',
+          disabled: locked,
+          icon: <ShieldIcon className="size-4" />,
+        }}
+        tone={isAdmin ? 'expense' : 'warn'}
+        icon={<ShieldIcon className="size-5" />}
+        title={isAdmin ? 'Админ эрхийг хасах' : 'Админ эрх олгох'}
+        subtitle={
           isAdmin
-            ? 'border border-border text-expense hover:bg-expense-soft'
-            : 'bg-accent text-on-accent hover:opacity-90'
-        }`}
-      >
-        {pending ? 'Хадгалж байна…' : isAdmin ? 'Админ эрхийг хасах' : 'Админ болгох'}
-      </button>
-      {isSelf && isAdmin ? (
-        <p className="text-xs text-muted">Өөрийнхөө админ эрхийг хасах боломжгүй.</p>
-      ) : null}
-      {state.error ? (
-        <p role="alert" className="text-sm text-expense">
-          {state.error}
-        </p>
-      ) : null}
-      {state.success ? (
-        <p role="status" className="text-sm text-income">
-          {state.success}
-        </p>
-      ) : null}
-    </form>
+            ? 'Энэ хүн админ самбарт нэвтрэх боломжгүй болно'
+            : 'Бүх хэрэглэгчийн санхүүгийн мэдээллийг харах эрх'
+        }
+        review={
+          <>
+            <ReviewRow label="Хэрэглэгч">{name}</ReviewRow>
+            <ReviewRow label="Одоогийн эрх">{roleBadge(role)}</ReviewRow>
+            <ReviewRow label="Шинэ эрх">{roleBadge(nextRole)}</ReviewRow>
+            <ReviewRow label="Харах мэдээлэл">
+              {isAdmin ? 'Зөвхөн өөрийнх' : 'Бүх хэрэглэгчийн гүйлгээ, хадгаламж'}
+            </ReviewRow>
+          </>
+        }
+        summary={
+          <div>
+            <p className="text-xs text-muted">{name}-ийн эрх</p>
+            <p className="mt-1 flex items-center gap-3 text-2xl font-semibold tracking-tight">
+              {isAdmin ? 'Админ' : 'Хэрэглэгч'} <span className="text-muted">→</span> {isAdmin ? 'Хэрэглэгч' : 'Админ'}
+            </p>
+          </div>
+        }
+        checks={
+          isAdmin
+            ? ['Энэ хүн админ самбарт дахин нэвтрэх боломжгүй болохыг ойлгож байна']
+            : [
+                'Энэ хүнийг таньдаг, итгэдэг',
+                'Админ бүх хэрэглэгчийн мэдээллийг харж, ангилал засна гэдгийг ойлгож байна',
+              ]
+        }
+        notice="Өөрчлөлт шууд хүчинтэй болно. Дараа нь энэ хуудаснаас буцааж өөрчилж болно."
+        confirmLabel={isAdmin ? 'Эрхийг хасах' : 'Эрх олгох'}
+        action={changeRole}
+        fields={{ userId, role: nextRole }}
+      />
+      {locked ? <p className="text-xs text-muted">Өөрийнхөө админ эрхийг хасах боломжгүй.</p> : null}
+    </div>
   );
 }

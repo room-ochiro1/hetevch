@@ -16,7 +16,7 @@ const ICON_TONES = {
 
 export function StatCard({ label, value, hint, icon: Icon, tone = 'accent' }: StatCardProps) {
   return (
-    <div className="flex items-start gap-4 rounded-2xl border border-border bg-surface p-5">
+    <div className="flex items-start gap-4 rounded-3xl bg-surface p-5 shadow-card">
       <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${ICON_TONES[tone]}`}>
         <Icon className="size-5" />
       </span>

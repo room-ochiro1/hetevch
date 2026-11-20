@@ -79,9 +79,9 @@ export async function ResearchKpis({ filters }: { filters: Filters }) {
             <p className="text-xs text-muted">{tile.note}</p>
           </>
         );
-        const box = 'flex flex-col gap-1 rounded-2xl border border-border bg-surface p-5';
+        const box = 'flex flex-col gap-1 rounded-3xl bg-surface p-5 shadow-card';
         return 'href' in tile && tile.href ? (
-          <Link key={tile.label} href={tile.href} scroll={false} className={`${box} hover:border-foreground/30`}>
+          <Link key={tile.label} href={tile.href} scroll={false} className={`${box} transition-shadow hover:shadow-pop`}>
             {body}
           </Link>
         ) : (
@@ -96,7 +96,7 @@ export function ResearchKpisSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {Array.from({ length: 5 }, (_, i) => (
-        <div key={i} aria-hidden className="h-28 animate-pulse rounded-2xl bg-surface-2" />
+        <div key={i} aria-hidden className="h-28 animate-pulse rounded-3xl bg-surface-2" />
       ))}
     </div>
   );
