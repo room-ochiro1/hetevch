@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 
 import { AttentionPanel } from '@/components/dashboard/attention-panel';
+import { PageSkeleton } from '@/components/admin/page-skeleton';
 import { BandDriftPanel } from '@/components/dashboard/band-drift-panel';
 import { CashflowPanel } from '@/components/dashboard/cashflow-panel';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
@@ -30,11 +31,23 @@ function PairSkeleton({ height }: { height: string }) {
 }
 
 /**
+ * The page shell renders at once; everything that reads the URL (?range, ?age, ?sex, ?detail)
+ * is inside Suspense, so a navigation shows the skeleton instantly instead of waiting.
+ */
+export default function DashboardPage({ searchParams }: PageProps<'/'>) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <Dashboard searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+/**
  * The filters at the top scope every section, so all numbers agree. Top to bottom: headline
  * numbers → when people use the app and what needs a look → where the money goes → trends.
  * Any number, bar or row opens a detail dialog; sections stream in on their own.
  */
-export default async function DashboardPage({ searchParams }: PageProps<'/'>) {
+async function Dashboard({ searchParams }: Pick<PageProps<'/'>, 'searchParams'>) {
   const params = await searchParams;
   const filters = parseFilters(params);
   const ctx = { basePath: '/', filters };

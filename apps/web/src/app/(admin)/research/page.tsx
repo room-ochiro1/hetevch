@@ -7,6 +7,7 @@ import { SavingsCardsTable } from '@/components/research/savings-cards-table';
 import { SavingsPanels } from '@/components/research/savings-panels';
 import { SpendingPanel } from '@/components/research/spending-panel';
 import { WeekdayPanels } from '@/components/research/weekday-panels';
+import { PageSkeleton } from '@/components/admin/page-skeleton';
 import { DetailHost } from '@/components/detail/detail-host';
 import { FilterBar } from '@/components/filters/filter-bar';
 import { PageHeader } from '@/components/ui/page-header';
@@ -20,11 +21,23 @@ function Skeleton({ className }: { className: string }) {
 }
 
 /**
+ * The page shell renders at once; everything that reads the URL (?range, ?age, ?sex, ?detail)
+ * is inside Suspense, so a navigation shows the skeleton instantly instead of waiting.
+ */
+export default function ResearchPage({ searchParams }: PageProps<'/research'>) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <Research searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+/**
  * Судалгаа: who the users are (age, gender), what they spend on and on which weekday, and how they
  * save. One period filter scopes every section; sections stream in on their own and share
  * one cached round of queries (getResearch). Admin accounts are left out of every number.
  */
-export default async function ResearchPage({ searchParams }: PageProps<'/research'>) {
+async function Research({ searchParams }: Pick<PageProps<'/research'>, 'searchParams'>) {
   const params = await searchParams;
   const filters = parseFilters(params);
   const { days, band } = filters;
